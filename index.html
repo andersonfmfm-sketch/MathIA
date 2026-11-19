@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathIA Games — Jogos de Matemática com IA</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, #312e81 0%, #4f46e5 100%);
+            color: white;
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .badge-ia {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-box:focus {
+            border-color: var(--primary);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e0e7ff;
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .game-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .authors {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+        }
+
+        .play-btn {
+            display: block;
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .play-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span class="badge-ia">✨ Projeto Matemática + Inteligência Artificial</span>
+        <h1>MathIA Games</h1>
+        <p>Mostra interativa de jogos digitais desenvolvidos pelos alunos utilizando raciocínio lógico, programação e Inteligência Artificial.</p>
+    </header>
+
+    <div class="container">
+        <div class="controls">
+            <input type="text" id="searchInput" class="search-box" placeholder="Buscar jogo ou nome do aluno...">
+            <div class="filters" id="filterButtons">
+                <button class="filter-btn active" data-category="todos">Todos</button>
+                <button class="filter-btn" data-category="Álgebra">Álgebra</button>
+                <button class="filter-btn" data-category="Geometria">Geometria</button>
+                <button class="filter-btn" data-category="Aritmética">Aritmética</button>
+                <button class="filter-btn" data-category="Lógica">Lógica</button>
+            </div>
+        </div>
+
+        <div class="games-grid" id="gamesGrid"></div>
+    </div>
+
+    <footer>
+        Desenvolvido pelos alunos com apoio do Gemini Canvas • Matemática na Prática
+    </footer>
+
+    <script>
+        // =====================================================================
+        // ÁREA DE EDIÇÃO DO PROFESSOR: Adicione ou edite os jogos abaixo!
+        // =====================================================================
+        const listaDeJogos = [
+            {
+                titulo: "Batalha Naval Cartesiana",
+                descricao: "Encontre os navios inimigos acertando as coordenadas (x, y) no plano cartesiano.",
+                categoria: "Geometria",
+                autores: "Ana Clara e João Pedro (8º Ano A)",
+                arquivo: "batalha-cartesiana.html" // Nome exato do arquivo enviado ao GitHub
+            },
+            {
+                titulo: "Desafio das Equações",
+                descricao: "Resolva equações de 1º grau contra o tempo para desarmar a bomba.",
+                categoria: "Álgebra",
+                autores: "Lucas, Mariana e Gabriel (8º Ano B)",
+                arquivo: "desafio-equacoes.html"
+            },
+            {
+                titulo: "Corrida das Frações",
+                descricao: "Compare frações equivalentes para fazer seu carro acelerar até a linha de chegada.",
+                categoria: "Aritmética",
+                autores: "Sofia e Pedro Henrique (7º Ano A)",
+                arquivo: "corrida-fracoes.html"
+            }
+        ];
+        // =====================================================================
+
+        const grid = document.getElementById('gamesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        let categoriaAtual = 'todos';
+
+        function renderizarJogos() {
+            const termo = searchInput.value.toLowerCase();
+            grid.innerHTML = '';
+
+            const filtrados = listaDeJogos.filter(jogo => {
+                const bateCategoria = categoriaAtual === 'todos' || jogo.categoria === categoriaAtual;
+                const bateBusca = jogo.titulo.toLowerCase().includes(termo) || 
+                                  jogo.autores.toLowerCase().includes(termo) ||
+                                  jogo.descricao.toLowerCase().includes(termo);
+                return bateCategoria && bateBusca;
+            });
+
+            if (filtrados.length === 0) {
+                grid.innerHTML = '<p style="color: #64748b;">Nenhum jogo encontrado com esse filtro.</p>';
+                return;
+            }
+
+            filtrados.forEach(jogo => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <div>
+                        <span class="tag">${jogo.categoria}</span>
+                        <h2>${jogo.titulo}</h2>
+                        <p>${jogo.descricao}</p>
+                    </div>
+                    <div>
+                        <div class="authors"><strong>Criado por:</strong> ${jogo.autores}</div>
+                        <a href="${jogo.arquivo}" target="_blank" class="play-btn">▶ Jogar Agora</a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener('input', renderizarJogos);
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                categoriaAtual = btn.dataset.category;
+                renderizarJogos();
+            });
+        });
+
+        renderizarJogos();
+    </script>
+</body>
+</html>
