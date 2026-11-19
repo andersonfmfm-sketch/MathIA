@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Duelo dos Matemáticos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-display: 'Fredoka', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-display);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    .font-math {
+      font-family: var(--font-mono);
+    }
+
+    /* Animações de Batalha */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes attackRight {
+      0% { transform: translateX(0) scale(1); }
+      40% { transform: translateX(70px) scale(1.15) rotate(8deg); }
+      100% { transform: translateX(0) scale(1); }
+    }
+
+    @keyframes attackLeft {
+      0% { transform: translateX(0) scaleX(-1); }
+      40% { transform: translateX(-70px) scaleX(-1.15) scaleY(1.15) rotate(-8deg); }
+      100% { transform: translateX(0) scaleX(-1); }
+    }
+
+    @keyframes hitShake {
+      0%, 100% { transform: translateX(0); filter: brightness(1); }
+      20% { transform: translateX(-14px); filter: brightness(2.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+      40% { transform: translateX(14px); }
+      60% { transform: translateX(-10px); }
+      80% { transform: translateX(10px); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 12px rgba(250, 204, 21, 0.6), 0 0 24px rgba(250, 204, 21, 0.3); }
+      50% { box-shadow: 0 0 22px rgba(250, 204, 21, 1), 0 0 40px rgba(250, 204, 21, 0.7); }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      70% { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes floatDamage {
+      0% { transform: translateY(0) scale(0.8); opacity: 1; }
+      100% { transform: translateY(-65px) scale(1.3); opacity: 0; }
+    }
+
+    @keyframes freezePulse {
+      0%, 100% { box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.8); }
+      50% { box-shadow: inset 0 0 45px rgba(186, 230, 253, 0.95); }
+    }
+
+    @keyframes projectileRight {
+      0% { left: 22%; transform: translateY(-50%) scale(0.5) rotate(0deg); opacity: 1; }
+      80% { left: 76%; transform: translateY(-50%) scale(1.4) rotate(360deg); opacity: 1; }
+      100% { left: 80%; transform: translateY(-50%) scale(2) rotate(420deg); opacity: 0; }
+    }
+
+    @keyframes projectileLeft {
+      0% { left: 78%; transform: translateY(-50%) scale(0.5) rotate(0deg); opacity: 1; }
+      80% { left: 24%; transform: translateY(-50%) scale(1.4) rotate(-360deg); opacity: 1; }
+      100% { left: 20%; transform: translateY(-50%) scale(2) rotate(-420deg); opacity: 0; }
+    }
+
+    @keyframes onFireGlow {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.85)) drop-shadow(0 0 22px rgba(234, 179, 8, 0.65)); }
+      50% { filter: drop-shadow(0 0 18px rgba(239, 68, 68, 1)) drop-shadow(0 0 32px rgba(250, 204, 21, 0.9)); }
+    }
+
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    .animate-attack-p1 { animation: attackRight 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+    .animate-attack-p2 { animation: attackLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+    .animate-hit { animation: hitShake 0.45s ease-in-out; }
+    .animate-pop { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .power-ready { animation: pulseGlow 1.3s infinite; }
+    .damage-popup { animation: floatDamage 1s ease-out forwards; pointer-events: none; }
+    .frozen-overlay { animation: freezePulse 1.5s infinite; }
+    .projectile-p1 { animation: projectileRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .projectile-p2 { animation: projectileLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .on-fire-aura { animation: onFireGlow 1s infinite; }
+
+    /* Cenários / Arenas */
+    .arena-alexandria {
+      background: radial-gradient(circle at 50% 25%, #fef3c7 0%, #d97706 45%, #78350f 100%);
+    }
+    .arena-nasa {
+      background: radial-gradient(circle at 50% 20%, #1e3a8a 0%, #0f172a 55%, #020617 100%);
+    }
+    .arena-greek {
+      background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 55%, #e2e8f0 55%, #cbd5e1 100%);
+    }
+    .arena-chalkboard {
+      background: radial-gradient(circle at 50% 40%, #1e4620 0%, #112a12 85%, #09170a 100%);
+      border: 10px solid #78350f;
+    }
+
+    /* Botões estilo Arcade 3D */
+    .btn-arcade {
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+    }
+    .btn-arcade:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.4) !important;
+    }
+    .btn-arcade:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 999px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Barra Superior Global -->
+  <header class="w-full bg-slate-900/90 border-b border-slate-700/80 px-4 py-2.5 flex items-center justify-between z-30 backdrop-blur-md">
+    <div class="flex items-center gap-2.5 cursor-pointer" onclick="goHome()">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+        π
+      </div>
+      <div>
+        <h1 class="text-lg sm:text-xl font-bold tracking-wide bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent">
+          DUELO DOS MATEMÁTICOS
+        </h1>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="btn-home" onclick="goHome()" class="hidden px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold border border-slate-600 transition">
+        🏠 Início
+      </button>
+      <button id="btn-rules" onclick="toggleRulesModal(true)" class="px-3 py-1.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 text-white text-sm font-semibold border border-indigo-400/50 transition">
+        📖 Regras
+      </button>
+      <button id="btn-sound" onclick="toggleSound()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-sm font-semibold border border-slate-600 transition" title="Alternar Som">
+        🔊 Som ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Container Principal das Telas -->
+  <main id="app-container" class="flex-1 flex flex-col relative overflow-hidden">
+
+    <!-- ================= TELA 1: MENU INICIAL ================= -->
+    <section id="screen-home" class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-900 to-slate-950">
+      <div class="max-w-4xl w-full text-center space-y-6 animate-pop">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 text-sm font-semibold">
+          <span>⚡</span> Arena Educativa de Cálculo Mental • Números Inteiros
+        </div>
+
+        <!-- Título Principal -->
+        <div class="space-y-2">
+          <h2 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.6)]">
+            DUELO DOS <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">MATEMÁTICOS</span>
+          </h2>
+          <p class="text-slate-300 text-base sm:text-xl max-w-2xl mx-auto">
+            Escolha um gênio da história, carregue sua energia resolvendo operações inteiras e dispare poderes especiais para vencer!
+          </p>
+        </div>
+
+        <!-- Cards de Seleção de Modo -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto pt-2">
+          <!-- Modo 1 Jogador -->
+          <button onclick="selectGameMode('1P')" class="group relative bg-gradient-to-br from-sky-600 to-blue-800 hover:from-sky-500 hover:to-blue-700 p-5 rounded-3xl border-2 border-sky-400/50 shadow-[0_8px_0_#1e3a8a] btn-arcade text-left flex flex-col justify-between overflow-hidden">
+            <div class="absolute -right-5 -bottom-5 text-7xl opacity-15 group-hover:scale-110 transition-transform">🤖</div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-3 py-1 rounded-full bg-sky-950/60 text-sky-200 text-xs font-bold uppercase tracking-wider">Duelo Rápido</span>
+              <span class="text-2xl">🧠 vs 🤖</span>
+            </div>
+            <div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-1">1 Jogador (Vs. IA)</h3>
+              <p class="text-sky-100/90 text-xs sm:text-sm">Partida rápida contra um gênio escolhido pelo computador.</p>
+            </div>
+          </button>
+
+          <!-- Modo Campanha / Torneio -->
+          <button onclick="selectGameMode('CAMPAIGN')" class="group relative bg-gradient-to-br from-amber-500 to-orange-700 hover:from-amber-400 hover:to-orange-600 p-5 rounded-3xl border-2 border-yellow-300/70 shadow-[0_8px_0_#7c2d12] btn-arcade text-left flex flex-col justify-between overflow-hidden">
+            <div class="absolute -right-5 -bottom-5 text-7xl opacity-15 group-hover:scale-110 transition-transform">🏆</div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-3 py-1 rounded-full bg-amber-950/60 text-yellow-200 text-xs font-bold uppercase tracking-wider">Desbloqueie Skins!</span>
+              <span class="text-2xl">🏆⚔️</span>
+            </div>
+            <div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-1">Modo Torneio (4 Chefes)</h3>
+              <p class="text-amber-100/95 text-xs sm:text-sm">Vença 4 matemáticos em sequência e desbloqueie Skins Neon/Especiais!</p>
+            </div>
+          </button>
+
+          <!-- Modo 2 Jogadores -->
+          <button onclick="selectGameMode('2P')" class="group relative bg-gradient-to-br from-rose-600 to-purple-800 hover:from-rose-500 hover:to-purple-700 p-5 rounded-3xl border-2 border-rose-300/60 shadow-[0_8px_0_#581c87] btn-arcade text-left flex flex-col justify-between overflow-hidden">
+            <div class="absolute -right-5 -bottom-5 text-7xl opacity-15 group-hover:scale-110 transition-transform">⚔️</div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-3 py-1 rounded-full bg-rose-950/60 text-rose-200 text-xs font-bold uppercase tracking-wider">Sala de Aula / X2</span>
+              <span class="text-2xl">🎮 vs 🎮</span>
+            </div>
+            <div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-1">2 Jogadores (X2 Local)</h3>
+              <p class="text-rose-100/90 text-xs sm:text-sm">Disputa simultânea no mesmo teclado ou toque na lousa digital!</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Preview rápido dos 8 Matemáticos -->
+        <div class="pt-4">
+          <p class="text-xs uppercase tracking-widest text-slate-400 mb-3 font-semibold">8 Gênios Jogáveis com Skins & Poderes Únicos</p>
+          <div id="home-roster-preview" class="flex flex-wrap justify-center gap-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TELA 2: SELEÇÃO DE PERSONAGENS, CENÁRIO E DIFICULDADE ================= -->
+    <section id="screen-setup" class="hidden flex-1 flex flex-col p-3 sm:p-5 bg-slate-900 overflow-y-auto">
+      <div class="max-w-7xl w-full mx-auto flex-1 flex flex-col gap-4">
+
+        <!-- Cabeçalho da Seleção -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-800/80 p-3 sm:p-4 rounded-2xl border border-slate-700">
+          <div>
+            <span id="setup-mode-badge" class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold uppercase">Modo 1 Jogador</span>
+            <h2 class="text-xl sm:text-2xl font-bold text-white mt-1">Prepare seu Duelo Matemático</h2>
+          </div>
+
+          <!-- Dificuldade & Cenário -->
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Filtro de Operações (Modo Professor) -->
+            <div class="bg-slate-900/90 p-1.5 rounded-xl border border-slate-700 flex items-center gap-1" title="Modo Professor: Escolha quais operações cairão no duelo">
+              <span class="text-xs text-amber-300 font-bold px-1.5">Operações:</span>
+              <button onclick="toggleOperation('+')" id="op-btn-+" class="w-8 h-8 rounded-lg font-math font-extrabold text-sm bg-sky-600 text-white transition">+</button>
+              <button onclick="toggleOperation('-')" id="op-btn--" class="w-8 h-8 rounded-lg font-math font-extrabold text-sm bg-sky-600 text-white transition">−</button>
+              <button onclick="toggleOperation('×')" id="op-btn-×" class="w-8 h-8 rounded-lg font-math font-extrabold text-sm bg-sky-600 text-white transition">×</button>
+              <button onclick="toggleOperation('÷')" id="op-btn-÷" class="w-8 h-8 rounded-lg font-math font-extrabold text-sm bg-sky-600 text-white transition">÷</button>
+            </div>
+
+            <!-- Seletor de Dificuldade -->
+            <div class="bg-slate-900/90 p-1.5 rounded-xl border border-slate-700 flex items-center gap-1">
+              <span class="text-xs text-slate-400 font-bold px-2">Nível:</span>
+              <button onclick="setDifficulty('easy')" id="diff-easy" class="diff-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-emerald-600 text-white">Fácil</button>
+              <button onclick="setDifficulty('medium')" id="diff-medium" class="diff-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-300 hover:bg-slate-800">Médio</button>
+              <button onclick="setDifficulty('hard')" id="diff-hard" class="diff-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+
+            <!-- Botão Iniciar Batalha -->
+            <button onclick="startBattle(true)" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-base sm:text-lg shadow-[0_5px_0_#065f46] btn-arcade flex items-center gap-2">
+              <span>⚔️</span> <span id="btn-start-label">INICIAR DUELO!</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Descrição da Dificuldade Atual + Seleção de Cenário -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- Descrição Dificuldade -->
+          <div class="lg:col-span-5 bg-slate-800/60 border border-slate-700/80 rounded-2xl p-3.5 flex flex-col justify-center">
+            <div class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">Regras do Nível Selecionado</div>
+            <p id="difficulty-desc" class="text-sm text-slate-200">
+              <strong>Fácil (1 a 10):</strong> Foco em adição, subtração simples e tabuadas básicas. Resultados sempre inteiros e positivos.
+            </p>
+          </div>
+
+          <!-- Seletor de Cenário -->
+          <div class="lg:col-span-7 bg-slate-800/60 border border-slate-700/80 rounded-2xl p-3.5">
+            <div class="text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">Escolha a Arena de Batalha</div>
+            <div id="arena-selector" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+          </div>
+        </div>
+
+        <!-- Painéis dos Jogadores (P1 vs P2/IA) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
+          <!-- Painel Jogador 1 -->
+          <div class="bg-slate-800/90 border-2 border-sky-500/60 rounded-3xl p-4 flex flex-col gap-3 shadow-xl">
+            <div class="flex items-center justify-between">
+              <span class="px-3 py-1 rounded-xl bg-sky-500 text-slate-950 font-extrabold text-sm">JOGADOR 1 (Azul)</span>
+              <span class="text-xs text-slate-400 font-mono">Teclas: [A] [S] [D] [F] | Poder: [Q]</span>
+            </div>
+
+            <!-- Card Destaque P1 -->
+            <div id="p1-selected-card" class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700 flex items-center gap-4"></div>
+
+            <!-- Grade de 8 Personagens P1 -->
+            <div id="p1-roster-grid" class="grid grid-cols-4 gap-2"></div>
+          </div>
+
+          <!-- Painel Jogador 2 / IA -->
+          <div id="p2-setup-wrapper" class="bg-slate-800/90 border-2 border-rose-500/60 rounded-3xl p-4 flex flex-col gap-3 shadow-xl">
+            <div class="flex items-center justify-between">
+              <span id="p2-panel-title" class="px-3 py-1 rounded-xl bg-rose-500 text-white font-extrabold text-sm">OPONENTE IA (Vermelho)</span>
+              <span id="p2-keys-hint" class="text-xs text-slate-400 font-mono">Controlado pelo Computador</span>
+            </div>
+
+            <!-- Card Destaque P2 -->
+            <div id="p2-selected-card" class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700 flex items-center gap-4"></div>
+
+            <!-- Grade de 8 Personagens P2 (ou Escada do Torneio) -->
+            <div id="p2-roster-grid" class="grid grid-cols-4 gap-2"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= TELA 3: ARENA DE BATALHA ================= -->
+    <section id="screen-battle" class="hidden flex-1 flex flex-col justify-between relative overflow-hidden">
+
+      <!-- Camada Visual da Arena (SVG decorativo + Fundo dinâmico) -->
+      <div id="battle-arena-bg" class="absolute inset-0 arena-alexandria transition-all duration-500 z-0"></div>
+      <div id="arena-svg-decor" class="absolute inset-0 pointer-events-none z-0 opacity-35"></div>
+      <!-- Camada de Projéteis Matemáticos -->
+      <div id="projectile-layer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>
+
+      <!-- HUD Superior: Barras de Vida (HP) e Energia -->
+      <div class="relative z-10 w-full max-w-7xl mx-auto px-3 pt-3 sm:px-6 sm:pt-4">
+        <!-- Barra de Progresso do Torneio (Visível apenas no Modo Campanha) -->
+        <div id="campaign-progress-bar" class="hidden mb-2 bg-slate-950/85 border border-amber-400/50 rounded-2xl px-4 py-1.5 flex items-center justify-between text-xs">
+          <span class="font-extrabold text-amber-300">🏆 MODO TORNEIO</span>
+          <div id="campaign-stages-dots" class="flex items-center gap-2"></div>
+          <span id="campaign-stage-label" class="font-bold text-slate-300">Luta 1 de 4</span>
+        </div>
+
+        <div class="grid grid-cols-11 gap-2 sm:gap-4 items-center bg-slate-950/80 backdrop-blur-md p-3 rounded-3xl border border-white/15 shadow-2xl">
+
+          <!-- Status Jogador 1 -->
+          <div class="col-span-5 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md bg-sky-500 text-slate-950 font-black text-xs">P1</span>
+                <span id="hud-p1-name" class="font-bold text-sm sm:text-lg text-white truncate">Pitágoras</span>
+              </div>
+              <span id="hud-p1-hp-text" class="font-math font-bold text-xs sm:text-sm text-emerald-400">100/100 HP</span>
+            </div>
+            <!-- Barra de HP P1 -->
+            <div class="w-full h-4 sm:h-5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-600">
+              <div id="hud-p1-hp-bar" class="h-full bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <!-- Barra de Energia P1 -->
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold text-amber-300">⚡ ENERGIA</span>
+              <div class="flex-1 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <div id="hud-p1-energy-bar" class="h-full bg-gradient-to-r from-amber-500 to-yellow-300 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span id="hud-p1-energy-text" class="font-math text-[11px] text-amber-300 font-bold">0%</span>
+            </div>
+          </div>
+
+          <!-- Placar Central / Rodada / Timer -->
+          <div class="col-span-1 flex flex-col items-center justify-center text-center">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex flex-col items-center justify-center text-slate-950 font-black shadow-lg border border-amber-200">
+              <span class="text-[9px] uppercase leading-none">Rodada</span>
+              <span id="hud-round" class="text-base sm:text-xl leading-tight">1</span>
+            </div>
+          </div>
+
+          <!-- Status Jogador 2 / IA -->
+          <div class="col-span-5 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <span id="hud-p2-hp-text" class="font-math font-bold text-xs sm:text-sm text-emerald-400">100/100 HP</span>
+              <div class="flex items-center gap-2">
+                <span id="hud-p2-name" class="font-bold text-sm sm:text-lg text-white truncate">Ada Lovelace</span>
+                <span id="hud-p2-tag" class="px-2 py-0.5 rounded-md bg-rose-500 text-white font-black text-xs">IA</span>
+              </div>
+            </div>
+            <!-- Barra de HP P2 -->
+            <div class="w-full h-4 sm:h-5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-600 flex justify-end">
+              <div id="hud-p2-hp-bar" class="h-full bg-gradient-to-l from-emerald-500 to-lime-400 rounded-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <!-- Barra de Energia P2 -->
+            <div class="flex items-center gap-2">
+              <span id="hud-p2-energy-text" class="font-math text-[11px] text-amber-300 font-bold">0%</span>
+              <div class="flex-1 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 flex justify-end">
+                <div id="hud-p2-energy-bar" class="h-full bg-gradient-to-l from-amber-500 to-yellow-300 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span class="text-[11px] font-bold text-amber-300">ENERGIA ⚡</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Palco Central: Lutadores + Conta Matemática -->
+      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-3 py-2 max-w-7xl w-full mx-auto">
+
+        <!-- Banner de Notificação / Poder Ativado -->
+        <div id="battle-banner" class="min-h-[34px] mb-1 flex items-center justify-center">
+          <span id="battle-banner-text" class="px-4 py-1 rounded-full bg-slate-900/85 border border-amber-400/50 text-amber-300 text-xs sm:text-sm font-bold shadow-lg">
+            Resolva a conta primeiro para atacar!
+          </span>
+        </div>
+
+        <!-- Área dos Personagens Frente a Frente + Cartão da Equação -->
+        <div class="w-full grid grid-cols-12 items-center gap-2 my-auto">
+
+          <!-- Lutador 1 (Esquerda) -->
+          <div class="col-span-3 sm:col-span-4 flex flex-col items-center justify-center relative">
+            <!-- Efeitos de Status P1 -->
+            <div id="p1-status-badges" class="flex flex-wrap justify-center gap-1 mb-1 min-h-[24px]"></div>
+            <!-- Container do Avatar P1 -->
+            <div id="p1-fighter-wrap" class="relative w-28 h-28 sm:w-44 sm:h-44 animate-float">
+              <div id="p1-fighter-avatar" class="w-full h-full drop-shadow-[0_12px_12px_rgba(0,0,0,0.6)]"></div>
+              <!-- Escudo Hipátia P1 -->
+              <div id="p1-shield-fx" class="hidden absolute -inset-2 rounded-full border-4 border-cyan-300 bg-cyan-400/20 animate-pulse pointer-events-none"></div>
+              <!-- Congelado Newton P1 -->
+              <div id="p1-freeze-fx" class="hidden absolute inset-0 rounded-3xl bg-sky-300/45 border-4 border-sky-200 flex items-center justify-center text-4xl pointer-events-none">❄️</div>
+            </div>
+            <!-- Popups de Dano/Cura P1 -->
+            <div id="p1-fx-layer" class="absolute inset-0 flex items-center justify-center pointer-events-none"></div>
+          </div>
+
+          <!-- Quadro Central da Conta Matemática -->
+          <div class="col-span-6 sm:col-span-4 flex flex-col items-center justify-center">
+            <div class="w-full bg-slate-950/90 backdrop-blur-md border-4 border-amber-400/80 rounded-3xl p-4 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.75)] text-center relative">
+              <!-- Timer da Rodada -->
+              <div class="flex items-center justify-between text-xs text-slate-400 font-bold mb-2">
+                <span id="battle-diff-label" class="uppercase text-amber-300">Nível Fácil</span>
+                <span id="round-timer-display" class="font-math text-sm px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 border border-slate-600">⏱️ 15s</span>
+              </div>
+
+              <!-- Expressão Matemática -->
+              <div id="equation-box" class="py-3 sm:py-5 px-2 rounded-2xl bg-slate-900 border border-slate-700/90 shadow-inner">
+                <div id="equation-text" class="font-math text-3xl sm:text-5xl font-extrabold text-white tracking-wider">
+                  12 + 8 = ?
+                </div>
+              </div>
+
+              <!-- Barra de Tempo Visual -->
+              <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-3">
+                <div id="round-timer-bar" class="h-full bg-gradient-to-r from-sky-400 to-indigo-500 transition-all duration-200" style="width: 100%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lutador 2 (Direita) -->
+          <div class="col-span-3 sm:col-span-4 flex flex-col items-center justify-center relative">
+            <!-- Efeitos de Status P2 -->
+            <div id="p2-status-badges" class="flex flex-wrap justify-center gap-1 mb-1 min-h-[24px]"></div>
+            <!-- Container do Avatar P2 -->
+            <div id="p2-fighter-wrap" class="relative w-28 h-28 sm:w-44 sm:h-44 animate-float" style="animation-delay: 0.6s;">
+              <div id="p2-fighter-avatar" class="w-full h-full transform -scale-x-100 drop-shadow-[0_12px_12px_rgba(0,0,0,0.6)]"></div>
+              <!-- Escudo Hipátia P2 -->
+              <div id="p2-shield-fx" class="hidden absolute -inset-2 rounded-full border-4 border-cyan-300 bg-cyan-400/20 animate-pulse pointer-events-none"></div>
+              <!-- Congelado Newton P2 -->
+              <div id="p2-freeze-fx" class="hidden absolute inset-0 rounded-3xl bg-sky-300/45 border-4 border-sky-200 flex items-center justify-center text-4xl pointer-events-none">❄️</div>
+            </div>
+            <!-- Popups de Dano/Cura P2 -->
+            <div id="p2-fx-layer" class="absolute inset-0 flex items-center justify-center pointer-events-none"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Painel Inferior de Controles (Tela Dividida P1 e P2) -->
+      <div class="relative z-10 w-full max-w-7xl mx-auto px-3 pb-3 sm:px-6 sm:pb-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+
+          <!-- Controles Jogador 1 -->
+          <div id="p1-controls-panel" class="relative bg-slate-950/90 backdrop-blur-md border-2 border-sky-500/70 rounded-3xl p-3 sm:p-4 shadow-2xl transition-all">
+            <!-- Overlay de Atordoamento / Congelamento P1 -->
+            <div id="p1-lock-overlay" class="hidden absolute inset-0 z-20 rounded-3xl bg-slate-950/85 backdrop-blur-xs flex flex-col items-center justify-center text-center p-3">
+              <span id="p1-lock-icon" class="text-4xl mb-1">💫</span>
+              <span id="p1-lock-text" class="font-extrabold text-lg text-amber-300">ATORDOADO!</span>
+              <span id="p1-lock-sub" class="text-xs text-slate-300">Aguarde 2.0s...</span>
+            </div>
+
+            <!-- Cabeçalho Controle P1 + Botão de Poder -->
+            <div class="flex items-center justify-between gap-2 mb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-sky-400"></span>
+                <span class="font-bold text-sm text-sky-200">JOGADOR 1</span>
+                <span id="p1-euler-badge" class="hidden px-2 py-0.5 rounded bg-purple-600 text-white text-[10px] font-bold">🔄 INVERTIDO!</span>
+              </div>
+
+              <button id="p1-power-btn" onclick="activatePower(1)" disabled class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs sm:text-sm shadow-[0_3px_0_#9a3412] btn-arcade flex items-center gap-1.5">
+                <span>⚡</span>
+                <span id="p1-power-label">Poder [Q]</span>
+              </button>
+            </div>
+
+            <!-- 4 Botões de Resposta P1 -->
+            <div id="p1-options-grid" class="grid grid-cols-2 gap-2.5">
+              <!-- Gerado via JS -->
+            </div>
+          </div>
+
+          <!-- Controles Jogador 2 (ou Status da IA) -->
+          <div id="p2-controls-panel" class="relative bg-slate-950/90 backdrop-blur-md border-2 border-rose-500/70 rounded-3xl p-3 sm:p-4 shadow-2xl transition-all">
+            <!-- Overlay de Atordoamento / Congelamento P2 -->
+            <div id="p2-lock-overlay" class="hidden absolute inset-0 z-20 rounded-3xl bg-slate-950/85 backdrop-blur-xs flex flex-col items-center justify-center text-center p-3">
+              <span id="p2-lock-icon" class="text-4xl mb-1">💫</span>
+              <span id="p2-lock-text" class="font-extrabold text-lg text-amber-300">ATORDOADO!</span>
+              <span id="p2-lock-sub" class="text-xs text-slate-300">Aguarde 2.0s...</span>
+            </div>
+
+            <!-- Cabeçalho Controle P2 + Botão de Poder -->
+            <div class="flex items-center justify-between gap-2 mb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                <span id="p2-control-title" class="font-bold text-sm text-rose-200">JOGADOR 2</span>
+                <span id="p2-euler-badge" class="hidden px-2 py-0.5 rounded bg-purple-600 text-white text-[10px] font-bold">🔄 INVERTIDO!</span>
+              </div>
+
+              <button id="p2-power-btn" onclick="activatePower(2)" disabled class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs sm:text-sm shadow-[0_3px_0_#9a3412] btn-arcade flex items-center gap-1.5">
+                <span>⚡</span>
+                <span id="p2-power-label">Poder [P]</span>
+              </button>
+            </div>
+
+            <!-- 4 Botões de Resposta P2 (ou Painel Pensando da IA) -->
+            <div id="p2-options-grid" class="grid grid-cols-2 gap-2.5">
+              <!-- Gerado via JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TELA 4: VITÓRIA E ESTATÍSTICAS ================= -->
+    <section id="screen-victory" class="hidden flex-1 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-slate-900 to-slate-950">
+      <div class="max-w-3xl w-full bg-slate-900/95 border-2 border-amber-400/70 rounded-3xl p-5 sm:p-7 shadow-2xl text-center space-y-5 animate-pop my-auto">
+
+        <div id="victory-badge" class="inline-block px-4 py-1 rounded-full bg-amber-400/20 text-amber-300 font-bold text-sm uppercase tracking-wider">
+          🏆 Fim do Duelo Matemático
+        </div>
+
+        <!-- Avatar do Vencedor -->
+        <div class="flex flex-col items-center">
+          <div id="victory-avatar" class="w-28 h-28 sm:w-36 sm:h-36 animate-float drop-shadow-[0_10px_20px_rgba(251,191,36,0.4)]"></div>
+          <h2 id="victory-title" class="text-2xl sm:text-4xl font-extrabold text-white mt-2">
+            Jogador 1 Venceu!
+          </h2>
+          <p id="victory-subtitle" class="text-amber-300 font-semibold text-sm sm:text-base mt-1">
+            Pitágoras dominou a arena com precisão absoluta!
+          </p>
+          <!-- Banner de Skin Desbloqueada -->
+          <div id="skin-unlock-banner" class="hidden mt-2 px-4 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/25 to-fuchsia-500/25 border border-amber-300 text-amber-200 text-xs sm:text-sm font-extrabold"></div>
+        </div>
+
+        <!-- Estatísticas Comparativas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+          <!-- Stats P1 -->
+          <div class="bg-slate-800/90 border border-sky-500/50 rounded-2xl p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-1.5">
+              <span class="font-extrabold text-sky-400 text-sm">JOGADOR 1</span>
+              <span id="stat-p1-char" class="text-xs font-bold text-slate-200">Pitágoras</span>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm">
+              <span class="text-slate-400">Total de Acertos:</span>
+              <span id="stat-p1-hits" class="font-math font-bold text-emerald-400">0</span>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm">
+              <span class="text-slate-400">Tempo Médio de Resposta:</span>
+              <span id="stat-p1-avg" class="font-math font-bold text-amber-300">0.0s</span>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm">
+              <span class="text-slate-400">Combo Máximo / Poderes:</span>
+              <span id="stat-p1-powers" class="font-math font-bold text-purple-300">0x / 0</span>
+            </div>
+          </div>
+
+          <!-- Stats P2 -->
+          <div class="bg-slate-800/90 border border-rose-500/50 rounded-2xl p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-1.5">
+              <span id="stat-p2-label" class="font-extrabold text-rose-400 text-sm">JOGADOR 2</span>
+              <span id="stat-p2-char" class="text-xs font-bold text-slate-200">Ada Lovelace</span>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm">
+              <span class="text-slate-400">Total de Acertos:</span>
+              <span id="stat-p2-hits" class="font-math font-bold text-emerald-400">0</span>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm">
+              <span class="text-slate-400">Tempo Médio de Resposta:</span>
+              <span id="stat-p2-avg" class="font-math font-bold text-amber-300">0.0s</span>
+            </div>
+            <div class="flex justify-between text-xs sm:text-sm">
+              <span class="text-slate-400">Combo Máximo / Poderes:</span>
+              <span id="stat-p2-powers" class="font-math font-bold text-purple-300">0x / 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revisão Pedagógica de Erros / Contas Difíceis -->
+        <div id="pedagogical-review-box" class="bg-slate-800/80 border border-indigo-500/40 rounded-2xl p-3.5 text-left">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-300">📚 Revisão Pedagógica da Partida</span>
+            <span id="review-count-badge" class="text-[11px] text-slate-400 font-semibold"></span>
+          </div>
+          <div id="pedagogical-review-list" class="max-h-28 overflow-y-auto space-y-1.5 text-xs"></div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div id="victory-actions" class="flex flex-wrap items-center justify-center gap-3 pt-1">
+          <button id="btn-next-stage" onclick="nextCampaignStage()" class="hidden px-7 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-base sm:text-lg shadow-[0_5px_0_#9a3412] btn-arcade">
+            ⚔️ Próximo Oponente do Torneio ➔
+          </button>
+          <button id="btn-replay" onclick="startBattle(true)" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-base shadow-[0_5px_0_#065f46] btn-arcade">
+            🔄 Jogar Novamente
+          </button>
+          <button onclick="goToSetup()" class="px-5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm sm:text-base border border-slate-600 btn-arcade">
+            🧙‍♂️ Trocar Personagens
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal de Regras e Poderes -->
+  <div id="rules-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-indigo-500/60 rounded-3xl max-w-2xl w-full max-h-[88vh] flex flex-col shadow-2xl animate-pop">
+      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="text-xl font-extrabold text-white flex items-center gap-2">📖 Guia do Duelo dos Matemáticos</h3>
+        <button onclick="toggleRulesModal(false)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-600 text-white font-bold">✕</button>
+      </div>
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-sm text-slate-200">
+        <div class="bg-slate-800/70 p-3.5 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-amber-300 mb-1">⚔️ Regras da Batalha</h4>
+          <ul class="list-disc pl-5 space-y-1 text-slate-300">
+            <li>Todas as operações usam <strong>apenas números inteiros</strong> (divisões sempre exatas).</li>
+            <li>Quem responder certo primeiro ataca o oponente e ganha <strong>+34% de Energia</strong>.</li>
+            <li>Se errar a resposta, o jogador fica <strong>Atordoado por 2 segundos</strong> sem poder clicar!</li>
+            <li>Com <strong>100% de Energia</strong>, ative o Poder Especial do seu matemático!</li>
+          </ul>
+        </div>
+
+        <div class="bg-slate-800/70 p-3.5 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-sky-300 mb-1">⌨️ Controles no Teclado & Toque</h4>
+          <p class="text-slate-300 mb-1"><strong>Jogador 1:</strong> Teclas <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">A</kbd> <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">S</kbd> <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">D</kbd> <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">F</kbd> para responder e <kbd class="px-1.5 py-0.5 bg-amber-600 text-slate-950 font-bold rounded">Q</kbd> para Poder.</p>
+          <p class="text-slate-300"><strong>Jogador 2:</strong> Teclas <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">J</kbd> <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">K</kbd> <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">L</kbd> <kbd class="px-1.5 py-0.5 bg-slate-700 rounded">Ç</kbd> (ou Setas ◄ ▼ ▲ ►) e <kbd class="px-1.5 py-0.5 bg-amber-600 text-slate-950 font-bold rounded">P</kbd> para Poder. Também funciona 100% por toque na tela!</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-emerald-300 mb-2">⚡ Poderes dos 8 Matemáticos</h4>
+          <div id="rules-powers-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. SISTEMA DE ÁUDIO SINTETIZADO (WEB AUDIO API - ZERO ARQUIVOS EXTERNOS)
+       ========================================================================= */
+    const SoundFX = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function init() {
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) ctx = new AudioCtx();
+        }
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume();
+        }
+      }
+
+      function playTone(freq, type, duration, startTime = 0, gainVal = 0.18, slideTo = null) {
+        if (muted) return;
+        init();
+        if (!ctx) return;
+
+        const now = ctx.currentTime + startTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+        }
+
+        gain.gain.setValueAtTime(gainVal, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+
+      return {
+        toggleMute() {
+          muted = !muted;
+          return muted;
+        },
+        isMuted: () => muted,
+        click() {
+          playTone(520, 'sine', 0.08, 0, 0.12, 680);
+        },
+        hit() {
+          playTone(440, 'triangle', 0.12, 0, 0.22, 660);
+          playTone(660, 'sine', 0.18, 0.09, 0.22, 880);
+          playTone(140, 'sawtooth', 0.2, 0.08, 0.18, 55);
+        },
+        wrong() {
+          playTone(210, 'sawtooth', 0.18, 0, 0.2, 140);
+          playTone(150, 'sawtooth', 0.25, 0.14, 0.2, 95);
+        },
+        power() {
+          playTone(330, 'sine', 0.15, 0, 0.2, 550);
+          playTone(550, 'triangle', 0.15, 0.1, 0.22, 880);
+          playTone(880, 'sine', 0.3, 0.2, 0.25, 1320);
+        },
+        shield() {
+          playTone(600, 'sine', 0.25, 0, 0.2, 900);
+        },
+        victory() {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((n, idx) => {
+            playTone(n, 'triangle', 0.24, idx * 0.13, 0.22);
+          });
+        }
+      };
+    })();
+
+    function toggleSound() {
+      const isMuted = SoundFX.toggleMute();
+      const btn = document.getElementById('btn-sound');
+      btn.textContent = isMuted ? '🔇 Som OFF' : '🔊 Som ON';
+      btn.classList.toggle('text-rose-400', isMuted);
+      btn.classList.toggle('text-amber-300', !isMuted);
+    }
+
+    /* =========================================================================
+       2. DADOS DOS 8 MATEMÁTICOS (PODERES + AVATARES SVG COM 2 SKINS CADA)
+       ========================================================================= */
+    const MATHEMATICIANS = [
+      {
+        id: 'pythagoras',
+        name: 'Pitágoras',
+        era: 'Grécia Antiga',
+        powerName: 'Teorema',
+        powerIcon: '📐',
+        powerDesc: 'Elimina automaticamente 2 alternativas erradas da conta atual.',
+        skins: [
+          { name: 'Clássica', primary: '#f59e0b', secondary: '#fef3c7', accent: '#b45309', bg: '#78350f' },
+          { name: 'Neon Cyber', primary: '#22d3ee', secondary: '#ecfeff', accent: '#0284c7', bg: '#083344' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Triângulo Retângulo Dourado/Neon ao fundo -->
+              <polygon points="22,88 22,30 85,88" fill="none" stroke="${s.primary}" stroke-width="3" opacity="0.65"/>
+              <!-- Toga -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="${s.secondary}"/>
+              <path d="M35 86 L75 108" stroke="${s.primary}" stroke-width="6"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="54" r="22" fill="#fed7aa"/>
+              <!-- Barba Filósofo -->
+              <path d="M38 56 Q60 96 82 56 Q72 78 60 82 Q48 78 38 56 Z" fill="#e2e8f0"/>
+              <!-- Faixa na cabeça -->
+              <rect x="38" y="38" width="44" height="6" rx="3" fill="${s.primary}"/>
+              <!-- Olhos -->
+              <circle cx="52" cy="50" r="2.8" fill="#1e293b"/>
+              <circle cx="68" cy="50" r="2.8" fill="#1e293b"/>
+              ${skinIdx === 1 ? `<rect x="44" y="45" width="32" height="9" rx="4" fill="${s.primary}" opacity="0.45"/>` : ''}
+            </svg>`;
+        }
+      },
+      {
+        id: 'ada',
+        name: 'Ada Lovelace',
+        era: 'Século XIX',
+        powerName: 'Algoritmo',
+        powerIcon: '💻',
+        powerDesc: 'Resolve a conta atual instantaneamente e ataca o oponente!',
+        skins: [
+          { name: 'Vitoriana', primary: '#ec4899', secondary: '#fce7f3', accent: '#9d174d', bg: '#500724' },
+          { name: 'Matrix Neon', primary: '#4ade80', secondary: '#dcfce7', accent: '#15803d', bg: '#052e16' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Código Binário decorativo -->
+              <text x="20" y="36" fill="${s.primary}" font-size="10" font-family="monospace" opacity="0.7">0101</text>
+              <text x="76" y="36" fill="${s.primary}" font-size="10" font-family="monospace" opacity="0.7">1010</text>
+              <!-- Vestido Vitoriano -->
+              <path d="M26 108 C32 80, 88 80, 94 108 Z" fill="${s.primary}"/>
+              <path d="M46 82 L60 98 L74 82 Z" fill="${s.secondary}"/>
+              <!-- Cabelo Coque -->
+              <circle cx="60" cy="27" r="11" fill="#3f2e21"/>
+              <circle cx="60" cy="54" r="21" fill="#ffedd5"/>
+              <path d="M39 50 Q60 28 81 50 Q78 32 60 32 Q42 32 39 50 Z" fill="#3f2e21"/>
+              <!-- Flores / Circuitos no cabelo -->
+              <circle cx="42" cy="40" r="5" fill="${s.primary}"/>
+              <circle cx="78" cy="40" r="5" fill="${s.primary}"/>
+              <!-- Olhos -->
+              <circle cx="52" cy="54" r="2.8" fill="#1e293b"/>
+              <circle cx="68" cy="54" r="2.8" fill="#1e293b"/>
+              <path d="M55 64 Q60 68 65 64" stroke="#be185d" stroke-width="2" fill="none"/>
+            </svg>`;
+        }
+      },
+      {
+        id: 'gauss',
+        name: 'Carl F. Gauss',
+        era: 'Século XVIII',
+        powerName: 'Soma Rápida',
+        powerIcon: '🔥',
+        powerDesc: 'Seu próximo acerto causa o DOBRO de dano (40 HP)!',
+        skins: [
+          { name: 'Clássica', primary: '#3b82f6', secondary: '#dbeafe', accent: '#1d4ed8', bg: '#172554' },
+          { name: 'Supernova', primary: '#f97316', secondary: '#ffedd5', accent: '#c2410c', bg: '#431407' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Casaco -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="${s.accent}"/>
+              <polygon points="52,82 68,82 60,104" fill="${s.secondary}"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="55" r="21" fill="#fed7aa"/>
+              <!-- Boina Clássica de Gauss -->
+              <ellipse cx="60" cy="34" rx="26" ry="10" fill="${s.primary}"/>
+              <rect x="40" y="34" width="40" height="6" rx="3" fill="${s.secondary}"/>
+              <!-- Olhos determinados -->
+              <circle cx="52" cy="54" r="2.8" fill="#1e293b"/>
+              <circle cx="68" cy="54" r="2.8" fill="#1e293b"/>
+              <path d="M47 48 L56 50" stroke="#1e293b" stroke-width="2"/>
+              <path d="M73 48 L64 50" stroke="#1e293b" stroke-width="2"/>
+              <path d="M54 66 Q60 69 66 66" stroke="#7c2d12" stroke-width="2" fill="none"/>
+            </svg>`;
+        }
+      },
+      {
+        id: 'hypatia',
+        name: 'Hipátia',
+        era: 'Alexandria',
+        powerName: 'Escudo Geométrico',
+        powerIcon: '🛡️',
+        powerDesc: 'Bloqueia o próximo ataque do oponente e recupera +15 de HP!',
+        skins: [
+          { name: 'Alexandria', primary: '#a855f7', secondary: '#f3e8ff', accent: '#7e22ce', bg: '#3b0764' },
+          { name: 'Cristal Astral', primary: '#2dd4bf', secondary: '#ccfbf1', accent: '#0f766e', bg: '#042f2e' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Astrolábio atrás -->
+              <circle cx="60" cy="55" r="36" fill="none" stroke="${s.primary}" stroke-width="2" stroke-dasharray="6 4"/>
+              <!-- Túnica -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="${s.primary}"/>
+              <path d="M40 84 Q60 96 80 84" stroke="${s.secondary}" stroke-width="4" fill="none"/>
+              <!-- Cabelo longo -->
+              <path d="M36 52 Q36 84 44 88 L76 88 Q84 84 84 52 Z" fill="#451a03"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="54" r="20" fill="#fde68a"/>
+              <!-- Tiara Estelar -->
+              <path d="M40 42 Q60 34 80 42" stroke="${s.secondary}" stroke-width="4" fill="none"/>
+              <polygon points="60,31 63,37 69,37 64,41 66,47 60,43 54,47 56,41 51,37 57,37" fill="${s.primary}"/>
+              <circle cx="52" cy="54" r="2.6" fill="#1e293b"/>
+              <circle cx="68" cy="54" r="2.6" fill="#1e293b"/>
+              <path d="M55 64 Q60 68 65 64" stroke="#92400e" stroke-width="2" fill="none"/>
+            </svg>`;
+        }
+      },
+      {
+        id: 'newton',
+        name: 'Isaac Newton',
+        era: 'Século XVII',
+        powerName: 'Gravidade',
+        powerIcon: '🍎',
+        powerDesc: 'Congela a tela e opções do oponente por 4 segundos!',
+        skins: [
+          { name: 'Clássica', primary: '#ef4444', secondary: '#fee2e2', accent: '#b91c1c', bg: '#450a0a' },
+          { name: 'Prisma Cósmico', primary: '#818cf8', secondary: '#e0e7ff', accent: '#4338ca', bg: '#1e1b4b' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Traje -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="#1e293b"/>
+              <path d="M52 82 L60 98 L68 82 Z" fill="#ffffff"/>
+              <!-- Cabelo Ondulado Longo -->
+              <path d="M34 48 Q32 82 44 86 L76 86 Q88 82 86 48 Q84 26 60 26 Q36 26 34 48 Z" fill="#cbd5e1"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="54" r="19" fill="#fed7aa"/>
+              <circle cx="53" cy="53" r="2.6" fill="#1e293b"/>
+              <circle cx="67" cy="53" r="2.6" fill="#1e293b"/>
+              <path d="M55 64 Q60 66 65 64" stroke="#7c2d12" stroke-width="2" fill="none"/>
+              <!-- Maçã Flutuante -->
+              <circle cx="92" cy="36" r="8" fill="${s.primary}"/>
+              <path d="M92 28 Q95 23 99 25" stroke="#4ade80" stroke-width="2.5" fill="none"/>
+            </svg>`;
+        }
+      },
+      {
+        id: 'katherine',
+        name: 'Katherine Johnson',
+        era: 'Era Espacial',
+        powerName: 'Trajetória',
+        powerIcon: '🚀',
+        powerDesc: 'Adiciona +5s extras ao relógio e reduz a dificuldade da conta atual!',
+        skins: [
+          { name: 'NASA 1969', primary: '#0ea5e9', secondary: '#e0f2fe', accent: '#0369a1', bg: '#0c4a6e' },
+          { name: 'Traje Estelar', primary: '#facc15', secondary: '#fef9c3', accent: '#ca8a04', bg: '#422006' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Órbita Espacial -->
+              <ellipse cx="60" cy="60" rx="46" ry="18" transform="rotate(-25 60 60)" fill="none" stroke="${s.primary}" stroke-width="2" opacity="0.75"/>
+              <!-- Traje -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="${s.secondary}"/>
+              <path d="M46 82 L60 95 L74 82" fill="none" stroke="${s.primary}" stroke-width="4"/>
+              <!-- Cabelo -->
+              <path d="M38 52 Q38 30 60 30 Q82 30 82 52 Z" fill="#1e1b18"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="55" r="20" fill="#9a5b32"/>
+              <!-- Óculos Icônicos -->
+              <rect x="44" y="48" width="13" height="9" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/>
+              <rect x="63" y="48" width="13" height="9" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/>
+              <line x1="57" y1="52" x2="63" y2="52" stroke="#ffffff" stroke-width="2"/>
+              <circle cx="50.5" cy="52.5" r="2.2" fill="#0f172a"/>
+              <circle cx="69.5" cy="52.5" r="2.2" fill="#0f172a"/>
+              <path d="M54 65 Q60 70 66 65" stroke="#fde68a" stroke-width="2" fill="none"/>
+            </svg>`;
+        }
+      },
+      {
+        id: 'euler',
+        name: 'Leonhard Euler',
+        era: 'Século XVIII',
+        powerName: 'Constante',
+        powerIcon: '🌀',
+        powerDesc: 'Embaralha as opções do oponente e INVERTE os controles dele por 1 rodada!',
+        skins: [
+          { name: 'Clássica', primary: '#10b981', secondary: '#d1fae5', accent: '#047857', bg: '#064e3b' },
+          { name: 'Vórtice e^iπ', primary: '#e879f9', secondary: '#fae8ff', accent: '#a21caf', bg: '#4a044e' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Casaco -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="${s.accent}"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="56" r="21" fill="#fed7aa"/>
+              <!-- Turbante/Lenço característico de Euler -->
+              <path d="M37 46 Q60 22 83 46 Q72 40 60 42 Q48 40 37 46 Z" fill="${s.secondary}"/>
+              <path d="M40 42 Q60 32 80 42" stroke="${s.primary}" stroke-width="4" fill="none"/>
+              <!-- Olhos -->
+              <circle cx="52" cy="55" r="2.8" fill="#1e293b"/>
+              <circle cx="68" cy="55" r="2.3" fill="#475569"/>
+              <path d="M54 66 Q60 70 66 66" stroke="#7c2d12" stroke-width="2" fill="none"/>
+            </svg>`;
+        }
+      },
+      {
+        id: 'noether',
+        name: 'Emmy Noether',
+        era: 'Século XX',
+        powerName: 'Simetria',
+        powerIcon: '⚖️',
+        powerDesc: 'Rouba 50% da barra de energia do oponente e transfere para você!',
+        skins: [
+          { name: 'Clássica', primary: '#f43f5e', secondary: '#ffe4e6', accent: '#be123c', bg: '#4c0519' },
+          { name: 'Quântica', primary: '#38bdf8', secondary: '#e0f2fe', accent: '#0284c7', bg: '#082f49' }
+        ],
+        renderAvatar(skinIdx) {
+          const s = this.skins[skinIdx];
+          return `
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" r="54" fill="${s.bg}" stroke="${s.primary}" stroke-width="5"/>
+              <!-- Simetria Geométrica ao fundo -->
+              <rect x="32" y="32" width="56" height="56" fill="none" stroke="${s.primary}" stroke-width="2" transform="rotate(45 60 60)" opacity="0.6"/>
+              <!-- Roupa -->
+              <path d="M26 108 C30 82, 90 82, 94 108 Z" fill="${s.primary}"/>
+              <circle cx="60" cy="86" r="5" fill="${s.secondary}"/>
+              <!-- Cabelo Preso -->
+              <path d="M38 52 Q38 30 60 30 Q82 30 82 52 Z" fill="#57534e"/>
+              <!-- Rosto -->
+              <circle cx="60" cy="55" r="20" fill="#ffedd5"/>
+              <!-- Óculos Redondos -->
+              <circle cx="51" cy="53" r="6.5" fill="none" stroke="#1e293b" stroke-width="2"/>
+              <circle cx="69" cy="53" r="6.5" fill="none" stroke="#1e293b" stroke-width="2"/>
+              <line x1="57.5" y1="53" x2="62.5" y2="53" stroke="#1e293b" stroke-width="2"/>
+              <circle cx="51" cy="53" r="2.2" fill="#1e293b"/>
+              <circle cx="69" cy="53" r="2.2" fill="#1e293b"/>
+              <path d="M54 65 Q60 69 66 65" stroke="#9f1239" stroke-width="2" fill="none"/>
+            </svg>`;
+        }
+      }
+    ];
+
+    /* =========================================================================
+       3. DADOS DOS 4 CENÁRIOS / FASES
+       ========================================================================= */
+    const ARENAS = [
+      {
+        id: 'alexandria',
+        name: 'Biblioteca de Alexandria',
+        icon: '📜',
+        cssClass: 'arena-alexandria',
+        svgDecor: `
+          <svg viewBox="0 0 800 400" preserveAspectRatio="none" class="w-full h-full">
+            <rect x="60" y="40" width="40" height="320" fill="#fef3c7"/>
+            <rect x="700" y="40" width="40" height="320" fill="#fef3c7"/>
+            <polygon points="40,40 400,5 760,40" fill="#f59e0b"/>
+            <circle cx="400" cy="180" r="110" fill="none" stroke="#fde68a" stroke-width="3" stroke-dasharray="10 8"/>
+          </svg>`
+      },
+      {
+        id: 'nasa',
+        name: 'Laboratório Espacial NASA',
+        icon: '🛸',
+        cssClass: 'arena-nasa',
+        svgDecor: `
+          <svg viewBox="0 0 800 400" preserveAspectRatio="none" class="w-full h-full">
+            <circle cx="120" cy="80" r="3" fill="#fff"/>
+            <circle cx="260" cy="50" r="2" fill="#fff"/>
+            <circle cx="650" cy="70" r="3" fill="#fff"/>
+            <circle cx="540" cy="110" r="2" fill="#38bdf8"/>
+            <circle cx="400" cy="200" r="140" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="12 6"/>
+            <line x1="0" y1="340" x2="800" y2="340" stroke="#38bdf8" stroke-width="3"/>
+          </svg>`
+      },
+      {
+        id: 'greek',
+        name: 'Templo Grego',
+        icon: '🏛️',
+        cssClass: 'arena-greek',
+        svgDecor: `
+          <svg viewBox="0 0 800 400" preserveAspectRatio="none" class="w-full h-full">
+            <rect x="90" y="70" width="35" height="250" fill="#ffffff"/>
+            <rect x="210" y="70" width="35" height="250" fill="#ffffff"/>
+            <rect x="555" y="70" width="35" height="250" fill="#ffffff"/>
+            <rect x="675" y="70" width="35" height="250" fill="#ffffff"/>
+            <polygon points="60,70 400,15 740,70" fill="#f8fafc"/>
+          </svg>`
+      },
+      {
+        id: 'chalkboard',
+        name: 'Quadro Negro Clássico',
+        icon: '🧮',
+        cssClass: 'arena-chalkboard',
+        svgDecor: `
+          <svg viewBox="0 0 800 400" preserveAspectRatio="none" class="w-full h-full">
+            <text x="50" y="90" fill="#ffffff" font-family="monospace" font-size="24" opacity="0.45">a² + b² = c²</text>
+            <text x="580" y="95" fill="#ffffff" font-family="monospace" font-size="24" opacity="0.45">e^(iπ) + 1 = 0</text>
+            <text x="70" y="330" fill="#ffffff" font-family="monospace" font-size="22" opacity="0.4">∑ n = n(n+1)/2</text>
+            <text x="570" y="330" fill="#ffffff" font-family="monospace" font-size="22" opacity="0.4">F = G·(m₁m₂)/r²</text>
+          </svg>`
+      }
+    ];
+
+    /* =========================================================================
+       4. ESTADO GLOBAL DO JOGO
+       ========================================================================= */
+    function loadUnlockedSkins() {
+      try {
+        const saved = localStorage.getItem('duelo_matematicos_skins');
+        return saved ? JSON.parse(saved) : ['pythagoras', 'ada']; // 2 liberadas inicialmente
+      } catch (e) {
+        return ['pythagoras', 'ada'];
+      }
+    }
+
+    function saveUnlockedSkin(charId) {
+      if (!state.unlockedSkins.includes(charId)) {
+        state.unlockedSkins.push(charId);
+        try {
+          localStorage.setItem('duelo_matematicos_skins', JSON.stringify(state.unlockedSkins));
+        } catch (e) {}
+        return true;
+      }
+      return false;
+    }
+
+    const state = {
+      mode: '1P', // '1P', 'CAMPAIGN' ou '2P'
+      difficulty: 'easy', // 'easy', 'medium', 'hard'
+      allowedOps: ['+', '-', '×', '÷'], // Filtro Modo Professor
+      arenaId: 'alexandria',
+      unlockedSkins: loadUnlockedSkins(),
+      campaign: {
+        stage: 0, // 0 a 3 (4 chefes)
+        opponents: []
+      },
+      p1: {
+        charId: 'pythagoras',
+        skin: 0,
+        hp: 100,
+        maxHp: 100,
+        energy: 0,
+        streak: 0,
+        maxStreak: 0,
+        stunnedUntil: 0,
+        frozenUntil: 0,
+        shielded: false,
+        doubleDamage: false,
+        eulerInverted: false,
+        hits: 0,
+        powersUsed: 0,
+        responseTimes: []
+      },
+      p2: {
+        charId: 'ada',
+        skin: 0,
+        hp: 100,
+        maxHp: 100,
+        energy: 0,
+        streak: 0,
+        maxStreak: 0,
+        stunnedUntil: 0,
+        frozenUntil: 0,
+        shielded: false,
+        doubleDamage: false,
+        eulerInverted: false,
+        hits: 0,
+        powersUsed: 0,
+        responseTimes: []
+      },
+      battle: {
+        active: false,
+        round: 1,
+        question: null,
+        p1Options: [],
+        p2Options: [],
+        reviewLog: [], // Histórico de erros e contas demoradas para revisão pedagógica
+        roundStartTime: 0,
+        roundDuration: 15,
+        timeLeft: 15,
+        roundLocked: false,
+        timerInterval: null,
+        statusInterval: null,
+        aiTimeout: null
+      }
+    };
+
+    /* =========================================================================
+       5. GERADOR DE CONTAS MATEMÁTICAS (100% NÚMEROS INTEIROS + FILTRO PROFESSOR)
+       ========================================================================= */
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateMathProblem(diffLevel) {
+      let text = '';
+      let answer = 0;
+
+      // Filtrar operações selecionadas pelo professor
+      let availableOps = [...state.allowedOps];
+      if (diffLevel === 'easy' && availableOps.length > 1 && availableOps.includes('÷')) {
+        // No fácil, se outras ops estiverem ativas, mantém foco em +, -, ×, mas permite ÷ se o professor marcou só ÷
+        if (availableOps.some(o => o !== '÷')) {
+          availableOps = availableOps.filter(o => o !== '÷');
+        }
+      }
+      const op = availableOps[randInt(0, availableOps.length - 1)];
+
+      if (diffLevel === 'easy') {
+        // Fácil: Números de 1 a 10
+        let a = randInt(1, 10);
+        let b = randInt(1, 10);
+
+        if (op === '+') {
+          answer = a + b;
+          text = `${a} + ${b}`;
+        } else if (op === '-') {
+          if (a < b) [a, b] = [b, a];
+          answer = a - b;
+          text = `${a} - ${b}`;
+        } else if (op === '×') {
+          answer = a * b;
+          text = `${a} × ${b}`;
+        } else {
+          const divisor = randInt(2, 9);
+          const quotient = randInt(1, 10);
+          answer = quotient;
+          text = `${divisor * quotient} ÷ ${divisor}`;
+        }
+      } else if (diffLevel === 'medium') {
+        // Médio: Números de 1 a 50, resultados inteiros positivos
+        if (op === '+') {
+          const a = randInt(5, 50);
+          const b = randInt(5, 50);
+          answer = a + b;
+          text = `${a} + ${b}`;
+        } else if (op === '-') {
+          let a = randInt(10, 50);
+          let b = randInt(2, 45);
+          if (a < b) [a, b] = [b, a];
+          answer = a - b;
+          text = `${a} - ${b}`;
+        } else if (op === '×') {
+          const a = randInt(3, 15);
+          const b = randInt(2, 12);
+          answer = a * b;
+          text = `${a} × ${b}`;
+        } else {
+          const divisor = randInt(2, 12);
+          const quotient = randInt(2, 15);
+          const dividend = divisor * quotient;
+          answer = quotient;
+          text = `${dividend} ÷ ${divisor}`;
+        }
+      } else {
+        // Difícil: Números até 100, incluindo inteiros negativos e divisões exatas maiores
+        const formatNum = (n) => (n < 0 ? `(${n})` : `${n}`);
+
+        if (op === '+') {
+          const a = randInt(-60, 80);
+          let b = randInt(-60, 80);
+          if (a >= 0 && b >= 0) b = -randInt(10, 65);
+          answer = a + b;
+          text = `${a} + ${formatNum(b)}`;
+        } else if (op === '-') {
+          const a = randInt(-50, 70);
+          let b = randInt(-50, 70);
+          if (a >= 0 && b >= 0 && a >= b) b = randInt(a + 1, 85);
+          answer = a - b;
+          text = `${a} - ${formatNum(b)}`;
+        } else if (op === '×') {
+          const a = randInt(-15, 18) || -7;
+          let b = randInt(-12, 15) || 6;
+          if (a > 0 && b > 0) b = -randInt(3, 12);
+          answer = a * b;
+          text = `${a} × ${formatNum(b)}`;
+        } else {
+          const divisor = (Math.random() < 0.5 ? -1 : 1) * randInt(3, 15);
+          const quotient = (Math.random() < 0.5 ? -1 : 1) * randInt(3, 16);
+          const dividend = divisor * quotient;
+          answer = quotient;
+          text = `${dividend} ÷ ${formatNum(divisor)}`;
+        }
+      }
+
+      // Gerar 3 distratores inteiros únicos próximos da resposta
+      const optionsSet = new Set([answer]);
+      const offsets = [-10, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 10];
+      let safety = 0;
+
+      while (optionsSet.size < 4 && safety < 100) {
+        safety++;
+        const delta = offsets[randInt(0, offsets.length - 1)];
+        let candidate = answer + delta;
+        if (diffLevel !== 'hard' && candidate < 0) {
+          candidate = Math.abs(candidate) + randInt(1, 5);
+        }
+        optionsSet.add(candidate);
+      }
+
+      const options = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+      return { text: `${text} = ?`, rawExpr: text, answer, options };
+    }
+
+    function toggleOperation(op) {
+      SoundFX.click();
+      if (state.allowedOps.includes(op)) {
+        if (state.allowedOps.length === 1) {
+          // Não permite desmarcar todas
+          return;
+        }
+        state.allowedOps = state.allowedOps.filter(o => o !== op);
+      } else {
+        state.allowedOps.push(op);
+      }
+      renderOperationButtons();
+    }
+
+    function renderOperationButtons() {
+      ['+', '-', '×', '÷'].forEach(op => {
+        const btn = document.getElementById(`op-btn-${op}`);
+        if (!btn) return;
+        const active = state.allowedOps.includes(op);
+        btn.className = active
+          ? 'w-8 h-8 rounded-lg font-math font-extrabold text-sm bg-sky-600 text-white shadow transition'
+          : 'w-8 h-8 rounded-lg font-math font-extrabold text-sm bg-slate-800 text-slate-500 hover:text-slate-300 transition';
+      });
+    }
+
+    /* =========================================================================
+       6. NAVEGAÇÃO E RENDERIZAÇÃO DAS TELAS DE MENU E SELEÇÃO
+       ========================================================================= */
+    function showScreen(screenId) {
+      ['screen-home', 'screen-setup', 'screen-battle', 'screen-victory'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+
+      const btnHome = document.getElementById('btn-home');
+      if (screenId === 'screen-home') {
+        btnHome.classList.add('hidden');
+      } else {
+        btnHome.classList.remove('hidden');
+      }
+    }
+
+    function stopBattleLoops() {
+      state.battle.active = false;
+      clearInterval(state.battle.timerInterval);
+      clearInterval(state.battle.statusInterval);
+      clearTimeout(state.battle.aiTimeout);
+    }
+
+    function goHome() {
+      SoundFX.click();
+      stopBattleLoops();
+      showScreen('screen-home');
+    }
+
+    function goToSetup() {
+      SoundFX.click();
+      stopBattleLoops();
+      renderSetupScreen();
+      showScreen('screen-setup');
+    }
+
+    function selectGameMode(mode) {
+      SoundFX.click();
+      state.mode = mode;
+      renderSetupScreen();
+      showScreen('screen-setup');
+    }
+
+    function setDifficulty(diff) {
+      SoundFX.click();
+      state.difficulty = diff;
+
+      const labels = {
+        easy: '<strong>Fácil (1 a 10):</strong> Foco em adição, subtração simples e tabuadas básicas. Resultados sempre inteiros e positivos.',
+        medium: '<strong>Médio (1 a 50):</strong> Todas as 4 operações (+, −, ×, ÷) com resultados sempre inteiros positivos.',
+        hard: '<strong>Difícil (Até 100 + Negativos):</strong> Inclui números inteiros negativos (ex: -12 + 8, -5 × 4) e divisões exatas maiores.'
+      };
+      document.getElementById('difficulty-desc').innerHTML = labels[diff];
+
+      ['easy', 'medium', 'hard'].forEach(d => {
+        const btn = document.getElementById(`diff-${d}`);
+        if (d === diff) {
+          btn.className = 'diff-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-emerald-600 text-white shadow';
+        } else {
+          btn.className = 'diff-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-300 hover:bg-slate-800';
+        }
+      });
+    }
+
+    function setArena(arenaId) {
+      SoundFX.click();
+      state.arenaId = arenaId;
+      renderArenaSelector();
+    }
+
+    function renderArenaSelector() {
+      const container = document.getElementById('arena-selector');
+      container.innerHTML = ARENAS.map(arena => {
+        const selected = arena.id === state.arenaId;
+        return `
+          <button onclick="setArena('${arena.id}')" class="p-2 rounded-xl border-2 text-left transition flex items-center gap-2 ${
+            selected
+              ? 'bg-sky-600/30 border-sky-400 text-white shadow-md'
+              : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-slate-500'
+          }">
+            <span class="text-xl">${arena.icon}</span>
+            <span class="text-xs font-bold leading-tight">${arena.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCharacter(playerNum, charId) {
+      SoundFX.click();
+      const p = playerNum === 1 ? state.p1 : state.p2;
+      p.charId = charId;
+      renderPlayerSetupPanel(playerNum);
+    }
+
+    function toggleSkin(playerNum) {
+      SoundFX.click();
+      const p = playerNum === 1 ? state.p1 : state.p2;
+      if (p.skin === 0) {
+        // Verificar se a skin alternativa está desbloqueada
+        if (!state.unlockedSkins.includes(p.charId)) {
+          return;
+        }
+        p.skin = 1;
+      } else {
+        p.skin = 0;
+      }
+      renderPlayerSetupPanel(playerNum);
+    }
+
+    function renderPlayerSetupPanel(playerNum) {
+      const p = playerNum === 1 ? state.p1 : state.p2;
+      const char = MATHEMATICIANS.find(m => m.id === p.charId);
+      const isSkinUnlocked = state.unlockedSkins.includes(p.charId);
+      if (!isSkinUnlocked && p.skin === 1) p.skin = 0;
+      const skinObj = char.skins[p.skin];
+
+      // Card de Destaque
+      const cardEl = document.getElementById(`p${playerNum}-selected-card`);
+      cardEl.innerHTML = `
+        <div class="w-20 h-20 sm:w-24 sm:h-24 shrink-0">
+          ${char.renderAvatar(p.skin)}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center justify-between gap-1">
+            <h4 class="text-lg sm:text-xl font-extrabold text-white truncate">${char.name}</h4>
+            <button onclick="toggleSkin(${playerNum})" ${!isSkinUnlocked ? 'disabled title="Vença este matemático no Modo Torneio para desbloquear!"' : ''} class="px-2.5 py-1 rounded-lg border text-xs font-bold transition ${
+              isSkinUnlocked
+                ? 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/50 text-amber-300'
+                : 'bg-slate-800 border-slate-700 text-slate-400 cursor-not-allowed'
+            }">
+              ${isSkinUnlocked ? `🎨 Skin: ${skinObj.name}` : '🔒 Skin Bloqueada (Torneio)'}
+            </button>
+          </div>
+          <div class="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 text-xs font-bold">
+            <span>${char.powerIcon}</span> Poder: ${char.powerName}
+          </div>
+          <p class="text-xs text-slate-300 mt-1 leading-snug">${char.powerDesc}</p>
+        </div>
+      `;
+
+      // Grade dos 8 personagens
+      const gridEl = document.getElementById(`p${playerNum}-roster-grid`);
+      gridEl.innerHTML = MATHEMATICIANS.map(m => {
+        const isSelected = m.id === p.charId;
+        const unlocked = state.unlockedSkins.includes(m.id);
+        const ringColor = playerNum === 1 ? 'border-sky-400 bg-sky-500/20' : 'border-rose-400 bg-rose-500/20';
+        return `
+          <button onclick="selectCharacter(${playerNum}, '${m.id}')" class="relative p-1.5 rounded-2xl border-2 transition flex flex-col items-center text-center ${
+            isSelected ? ringColor + ' scale-105 shadow-lg' : 'border-slate-700 bg-slate-900/70 hover:border-slate-500'
+          }">
+            ${unlocked ? '<span class="absolute top-1 right-1 text-[10px]" title="Skin Alternativa Desbloqueada">✨</span>' : ''}
+            <div class="w-11 h-11 sm:w-12 sm:h-12">
+              ${m.renderAvatar(isSelected ? p.skin : 0)}
+            </div>
+            <span class="text-[11px] font-bold text-white truncate w-full mt-1">${m.name.split(' ')[0]}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderSetupScreen() {
+      const is2P = state.mode === '2P';
+      const isCampaign = state.mode === 'CAMPAIGN';
+
+      const modeNames = {
+        '1P': 'Modo 1 Jogador (Vs. IA)',
+        '2P': 'Modo 2 Jogadores (X2 Local)',
+        'CAMPAIGN': 'Modo Torneio (4 Chefes em Sequência)'
+      };
+      document.getElementById('setup-mode-badge').textContent = modeNames[state.mode];
+      document.getElementById('btn-start-label').textContent = isCampaign ? 'INICIAR TORNEIO!' : 'INICIAR DUELO!';
+
+      setDifficulty(state.difficulty);
+      renderOperationButtons();
+      renderArenaSelector();
+      renderPlayerSetupPanel(1);
+
+      const p2Wrapper = document.getElementById('p2-setup-wrapper');
+      if (isCampaign) {
+        p2Wrapper.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-sm">🏆 ESCADA DO TORNEIO</span>
+            <span class="text-xs text-amber-300 font-bold">4 Desafios Consecutivos</span>
+          </div>
+          <div class="bg-slate-900/90 rounded-2xl p-4 border border-amber-500/40 flex-1 flex flex-col justify-center space-y-2.5 text-sm">
+            <p class="text-slate-200">Enfrente <strong>4 matemáticos</strong> em sequência! A cada vitória:</p>
+            <ul class="list-disc pl-5 text-xs text-slate-300 space-y-1">
+              <li>Você recupera <strong>+40 HP</strong> para a próxima luta.</li>
+              <li>Você desbloqueia permanentemente a <strong>Skin Alternativa</strong> do adversário derrotado!</li>
+              <li>Os adversários ficam mais rápidos a cada fase do torneio.</li>
+            </ul>
+            <div class="pt-1 flex items-center justify-between text-xs text-amber-300 font-bold">
+              <span>Skins Desbloqueadas: ${state.unlockedSkins.length} / ${MATHEMATICIANS.length}</span>
+              <span>✨ Colecione todas!</span>
+            </div>
+          </div>
+        `;
+      } else {
+        // Restaurar painel padrão P2 se veio do modo campanha
+        p2Wrapper.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span id="p2-panel-title" class="px-3 py-1 rounded-xl bg-rose-500 text-white font-extrabold text-sm">${is2P ? 'JOGADOR 2 (Vermelho)' : 'OPONENTE IA (Vermelho)'}</span>
+            <span id="p2-keys-hint" class="text-xs text-slate-400 font-mono">${is2P ? 'Teclas: [J] [K] [L] [Ç] ou Setas | Poder: [P]' : 'Controlado pelo Computador'}</span>
+          </div>
+          <div id="p2-selected-card" class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700 flex items-center gap-4"></div>
+          <div id="p2-roster-grid" class="grid grid-cols-4 gap-2"></div>
+        `;
+        renderPlayerSetupPanel(2);
+      }
+    }
+
+    function toggleRulesModal(show) {
+      SoundFX.click();
+      const modal = document.getElementById('rules-modal');
+      if (show) {
+        const list = document.getElementById('rules-powers-list');
+        list.innerHTML = MATHEMATICIANS.map(m => `
+          <div class="bg-slate-800/90 p-2.5 rounded-xl border border-slate-700 flex items-start gap-2">
+            <span class="text-xl">${m.powerIcon}</span>
+            <div>
+              <div class="font-bold text-white text-xs">${m.name} — <span class="text-amber-300">${m.powerName}</span></div>
+              <div class="text-[11px] text-slate-300">${m.powerDesc}</div>
+            </div>
+          </div>
+        `).join('');
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    /* =========================================================================
+       7. LÓGICA PRINCIPAL DE BATALHA, PODERES E IA
+       ========================================================================= */
+    function getChar(playerNum) {
+      const id = playerNum === 1 ? state.p1.charId : state.p2.charId;
+      return MATHEMATICIANS.find(m => m.id === id);
+    }
+
+    function startBattle(resetCampaign = true) {
+      SoundFX.click();
+      stopBattleLoops();
+
+      // Configurar Torneio se estiver no modo CAMPAIGN
+      const campaignBar = document.getElementById('campaign-progress-bar');
+      if (state.mode === 'CAMPAIGN') {
+        if (resetCampaign) {
+          state.campaign.stage = 0;
+          // Escolher 4 oponentes diferentes do jogador 1 (priorizando os que ainda têm skin bloqueada)
+          const candidates = MATHEMATICIANS.filter(m => m.id !== state.p1.charId);
+          candidates.sort((a, b) => {
+            const aLocked = !state.unlockedSkins.includes(a.id) ? -1 : 1;
+            const bLocked = !state.unlockedSkins.includes(b.id) ? -1 : 1;
+            return aLocked - bLocked || (Math.random() - 0.5);
+          });
+          state.campaign.opponents = candidates.slice(0, 4).map(m => m.id);
+        }
+        state.p2.charId = state.campaign.opponents[state.campaign.stage];
+        state.p2.skin = 1; // Chefes do torneio usam a skin especial!
+        // Mudar cenário automaticamente conforme a fase do torneio
+        state.arenaId = ARENAS[state.campaign.stage % ARENAS.length].id;
+
+        campaignBar.classList.remove('hidden');
+        document.getElementById('campaign-stage-label').textContent = `Luta ${state.campaign.stage + 1} de 4`;
+        document.getElementById('campaign-stages-dots').innerHTML = state.campaign.opponents.map((oppId, idx) => {
+          const opp = MATHEMATICIANS.find(m => m.id === oppId);
+          const done = idx < state.campaign.stage;
+          const current = idx === state.campaign.stage;
+          return `<span class="px-2 py-0.5 rounded-full font-bold ${
+            done ? 'bg-emerald-500/30 text-emerald-300' : current ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'
+          }">${idx + 1}. ${opp.name.split(' ')[0]}</span>`;
+        }).join('');
+      } else {
+        campaignBar.classList.add('hidden');
+      }
+
+      // Resetar atributos dos jogadores (no torneio, P1 mantém HP acumulado +40 de cura entre fases)
+      const keepP1Hp = state.mode === 'CAMPAIGN' && !resetCampaign && state.campaign.stage > 0;
+      const nextP1Hp = keepP1Hp ? Math.min(100, state.p1.hp + 40) : 100;
+
+      [state.p1, state.p2].forEach((p, idx) => {
+        p.hp = idx === 0 ? nextP1Hp : 100;
+        p.maxHp = 100;
+        p.energy = 0;
+        p.streak = 0;
+        p.maxStreak = 0;
+        p.stunnedUntil = 0;
+        p.frozenUntil = 0;
+        p.shielded = false;
+        p.doubleDamage = false;
+        p.eulerInverted = false;
+        p.hits = 0;
+        p.powersUsed = 0;
+        p.responseTimes = [];
+      });
+
+      state.battle.active = true;
+      state.battle.round = 1;
+      state.battle.reviewLog = [];
+
+      // Configurar Cenário
+      const arena = ARENAS.find(a => a.id === state.arenaId) || ARENAS[0];
+      const bgEl = document.getElementById('battle-arena-bg');
+      bgEl.className = `absolute inset-0 transition-all duration-500 z-0 ${arena.cssClass}`;
+      document.getElementById('arena-svg-decor').innerHTML = arena.svgDecor;
+
+      // Configurar Avatares e Nomes no HUD
+      const c1 = getChar(1);
+      const c2 = getChar(2);
+      document.getElementById('hud-p1-name').textContent = c1.name;
+      document.getElementById('hud-p2-name').textContent = c2.name;
+      document.getElementById('hud-p2-tag').textContent = state.mode === '2P' ? 'P2' : (state.mode === 'CAMPAIGN' ? 'CHEFE' : 'IA');
+      document.getElementById('p2-control-title').textContent = state.mode === '2P' ? 'JOGADOR 2' : `IA (${c2.name})`;
+
+      document.getElementById('p1-fighter-avatar').innerHTML = c1.renderAvatar(state.p1.skin);
+      document.getElementById('p2-fighter-avatar').innerHTML = c2.renderAvatar(state.p2.skin);
+
+      const diffNames = { easy: 'Nível Fácil', medium: 'Nível Médio', hard: 'Nível Difícil' };
+      document.getElementById('battle-diff-label').textContent = diffNames[state.difficulty];
+
+      showScreen('screen-battle');
+      updateBattleHUD();
+      startNewRound();
+
+      // Loop rápido para atualizar bloqueios de atordoamento e congelamento
+      state.battle.statusInterval = setInterval(updateLocksUI, 100);
+    }
+
+    function nextCampaignStage() {
+      state.campaign.stage++;
+      startBattle(false);
+    }
+
+    function launchProjectile(attackerNum) {
+      const layer = document.getElementById('projectile-layer');
+      if (!layer) return;
+      const symbols = ['π', '∑', '√', '∞', '∆', '÷', '×'];
+      const sym = symbols[randInt(0, symbols.length - 1)];
+      const el = document.createElement('div');
+      el.className = `absolute top-1/2 font-math font-black text-4xl sm:text-6xl drop-shadow-[0_0_15px_rgba(250,204,21,0.95)] ${
+        attackerNum === 1 ? 'text-sky-300 projectile-p1' : 'text-rose-400 projectile-p2'
+      }`;
+      el.textContent = sym;
+      layer.appendChild(el);
+      setTimeout(() => el.remove(), 500);
+    }
+
+    function setBanner(msg, colorClass = 'text-amber-300 border-amber-400/50') {
+      const el = document.getElementById('battle-banner-text');
+      el.className = `px-4 py-1 rounded-full bg-slate-900/90 border text-xs sm:text-sm font-bold shadow-lg transition-all ${colorClass}`;
+      el.textContent = msg;
+    }
+
+    function spawnFloatingText(playerNum, text, colorClass) {
+      const layer = document.getElementById(`p${playerNum}-fx-layer`);
+      const popup = document.createElement('div');
+      popup.className = `damage-popup absolute font-extrabold text-2xl sm:text-4xl drop-shadow-[0_3px_3px_rgba(0,0,0,0.9)] ${colorClass}`;
+      popup.textContent = text;
+      layer.appendChild(popup);
+      setTimeout(() => popup.remove(), 1000);
+    }
+
+    function updateBattleHUD() {
+      [1, 2].forEach(num => {
+        const p = num === 1 ? state.p1 : state.p2;
+        const c = getChar(num);
+        const hpPct = Math.max(0, Math.min(100, (p.hp / p.maxHp) * 100));
+
+        document.getElementById(`hud-p${num}-hp-text`).textContent = `${p.hp}/${p.maxHp} HP`;
+        const hpBar = document.getElementById(`hud-p${num}-hp-bar`);
+        hpBar.style.width = `${hpPct}%`;
+
+        // Cor dinâmica da barra de HP
+        if (hpPct > 50) {
+          hpBar.className = `h-full bg-gradient-to-${num === 1 ? 'r' : 'l'} from-emerald-500 to-lime-400 rounded-full transition-all duration-300`;
+        } else if (hpPct > 25) {
+          hpBar.className = `h-full bg-gradient-to-${num === 1 ? 'r' : 'l'} from-amber-500 to-yellow-400 rounded-full transition-all duration-300`;
+        } else {
+          hpBar.className = `h-full bg-gradient-to-${num === 1 ? 'r' : 'l'} from-rose-600 to-red-500 rounded-full transition-all duration-300`;
+        }
+
+        // Energia
+        const energyPct = Math.min(100, Math.round(p.energy));
+        document.getElementById(`hud-p${num}-energy-bar`).style.width = `${energyPct}%`;
+        document.getElementById(`hud-p${num}-energy-text`).textContent = `${energyPct}%`;
+
+        // Botão de Poder
+        const powerBtn = document.getElementById(`p${num}-power-btn`);
+        const powerLabel = document.getElementById(`p${num}-power-label`);
+        const keyHint = num === 1 ? '[Q]' : (state.mode === '2P' ? '[P]' : 'IA');
+        powerLabel.textContent = `${c.powerName} ${keyHint}`;
+
+        if (energyPct >= 100 && !(num === 2 && state.mode !== '2P')) {
+          powerBtn.disabled = false;
+          powerBtn.classList.add('power-ready');
+        } else {
+          powerBtn.disabled = true;
+          powerBtn.classList.remove('power-ready');
+        }
+
+        // Efeitos Visuais no Lutador (Escudo Hipátia, Dano Dobrado Gauss, Euler, Combo Em Chamas)
+        document.getElementById(`p${num}-shield-fx`).classList.toggle('hidden', !p.shielded);
+        document.getElementById(`p${num}-euler-badge`).classList.toggle('hidden', !p.eulerInverted);
+
+        const fighterWrap = document.getElementById(`p${num}-fighter-wrap`);
+        fighterWrap.classList.toggle('on-fire-aura', p.streak >= 3);
+
+        const badgesEl = document.getElementById(`p${num}-status-badges`);
+        let badgesHtml = '';
+        if (p.streak >= 3) badgesHtml += `<span class="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-white text-[10px] font-extrabold animate-pulse">🔥 Em Chamas (${p.streak}x | +5 Dano)</span>`;
+        else if (p.streak === 2) badgesHtml += `<span class="px-2 py-0.5 rounded-full bg-amber-500/80 text-slate-950 text-[10px] font-extrabold">⚡ Combo 2x</span>`;
+        if (p.shielded) badgesHtml += `<span class="px-2 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-extrabold">🛡️ Escudo</span>`;
+        if (p.doubleDamage) badgesHtml += `<span class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-extrabold">💥 2x Dano</span>`;
+        if (p.eulerInverted) badgesHtml += `<span class="px-2 py-0.5 rounded-full bg-purple-500 text-white text-[10px] font-extrabold">🌀 Invertido</span>`;
+        badgesEl.innerHTML = badgesHtml;
+      });
+
+      document.getElementById('hud-round').textContent = state.battle.round;
+    }
+
+    function updateLocksUI() {
+      if (!state.battle.active) return;
+      const now = Date.now();
+
+      [1, 2].forEach(num => {
+        const p = num === 1 ? state.p1 : state.p2;
+        const overlay = document.getElementById(`p${num}-lock-overlay`);
+        const freezeFx = document.getElementById(`p${num}-freeze-fx`);
+
+        if (now < p.frozenUntil) {
+          const rem = ((p.frozenUntil - now) / 1000).toFixed(1);
+          overlay.classList.remove('hidden');
+          overlay.classList.add('frozen-overlay');
+          document.getElementById(`p${num}-lock-icon`).textContent = '❄️';
+          document.getElementById(`p${num}-lock-text`).textContent = 'CONGELADO PELA GRAVIDADE!';
+          document.getElementById(`p${num}-lock-sub`).textContent = `Descongela em ${rem}s...`;
+          freezeFx.classList.remove('hidden');
+        } else if (now < p.stunnedUntil) {
+          const rem = ((p.stunnedUntil - now) / 1000).toFixed(1);
+          overlay.classList.remove('hidden');
+          overlay.classList.remove('frozen-overlay');
+          document.getElementById(`p${num}-lock-icon`).textContent = '💫';
+          document.getElementById(`p${num}-lock-text`).textContent = 'ATORDOADO! (Errou)';
+          document.getElementById(`p${num}-lock-sub`).textContent = `Aguarde ${rem}s...`;
+          freezeFx.classList.add('hidden');
+        } else {
+          overlay.classList.add('hidden');
+          freezeFx.classList.add('hidden');
+        }
+      });
+    }
+
+    function startNewRound(customDifficulty = null) {
+      if (!state.battle.active) return;
+
+      clearInterval(state.battle.timerInterval);
+      clearTimeout(state.battle.aiTimeout);
+
+      const diffToUse = customDifficulty || state.difficulty;
+      const q = generateMathProblem(diffToUse);
+      state.battle.question = q;
+      state.battle.roundLocked = false;
+      state.battle.roundStartTime = Date.now();
+      state.battle.roundDuration = state.difficulty === 'hard' ? 18 : 15;
+      state.battle.timeLeft = state.battle.roundDuration;
+
+      // Clonar opções para cada jogador (permite poderes individuais como Pitágoras e Euler)
+      state.battle.p1Options = q.options.map(val => ({ value: val, eliminated: false }));
+      state.battle.p2Options = q.options.map(val => ({ value: val, eliminated: false }));
+
+      // Se Euler inverteu algum jogador na rodada anterior, embaralhar suas opções
+      if (state.p1.eulerInverted) {
+        state.battle.p1Options.sort(() => Math.random() - 0.5);
+      }
+      if (state.p2.eulerInverted) {
+        state.battle.p2Options.sort(() => Math.random() - 0.5);
+      }
+
+      document.getElementById('equation-text').textContent = q.text;
+      renderBattleOptions();
+      updateTimerDisplay();
+
+      // Timer da rodada
+      state.battle.timerInterval = setInterval(() => {
+        if (!state.battle.active || state.battle.roundLocked) return;
+        state.battle.timeLeft -= 0.2;
+        if (state.battle.timeLeft <= 0) {
+          state.battle.timeLeft = 0;
+          updateTimerDisplay();
+          handleRoundTimeout();
+        } else {
+          updateTimerDisplay();
+        }
+      }, 200);
+
+      // Se modo 1P, agendar resposta/poder da IA
+      scheduleAITurn();
+    }
+
+    function updateTimerDisplay() {
+      const t = Math.ceil(state.battle.timeLeft);
+      const pct = Math.max(0, (state.battle.timeLeft / state.battle.roundDuration) * 100);
+      document.getElementById('round-timer-display').textContent = `⏱️ ${t}s`;
+      const bar = document.getElementById('round-timer-bar');
+      bar.style.width = `${pct}%`;
+      if (pct < 30) {
+        bar.className = 'h-full bg-gradient-to-r from-rose-500 to-red-600 transition-all duration-200';
+      } else {
+        bar.className = 'h-full bg-gradient-to-r from-sky-400 to-indigo-500 transition-all duration-200';
+      }
+    }
+
+    function renderBattleOptions() {
+      const p1Keys = ['A', 'S', 'D', 'F'];
+      const p2Keys = ['J', 'K', 'L', 'Ç'];
+
+      // Renderizar botões P1
+      const p1Grid = document.getElementById('p1-options-grid');
+      p1Grid.innerHTML = state.battle.p1Options.map((opt, idx) => {
+        const displayKey = state.p1.eulerInverted ? p1Keys[3 - idx] : p1Keys[idx];
+        return `
+          <button
+            onclick="submitAnswer(1, ${idx})"
+            ${opt.eliminated ? 'disabled' : ''}
+            class="relative py-3 sm:py-4 px-3 rounded-2xl font-math font-extrabold text-xl sm:text-2xl border-2 transition btn-arcade flex items-center justify-center ${
+              opt.eliminated
+                ? 'bg-slate-900/40 border-slate-800 text-slate-600 line-through opacity-35'
+                : 'bg-gradient-to-b from-sky-600 to-sky-800 hover:from-sky-500 hover:to-sky-700 border-sky-400/70 text-white shadow-[0_4px_0_#0c4a6e]'
+            }">
+            <span class="absolute left-2.5 top-1.5 text-[11px] font-sans font-bold px-1.5 py-0.5 rounded bg-slate-950/60 text-sky-200">${displayKey}</span>
+            <span>${opt.value}</span>
+          </button>
+        `;
+      }).join('');
+
+      // Renderizar botões P2 (ou visual da IA)
+      const p2Grid = document.getElementById('p2-options-grid');
+      if (state.mode !== '2P') {
+        p2Grid.innerHTML = state.battle.p2Options.map((opt) => `
+          <div class="py-3 sm:py-4 px-3 rounded-2xl font-math font-extrabold text-xl sm:text-2xl border-2 flex items-center justify-center ${
+            opt.eliminated
+              ? 'bg-slate-900/40 border-slate-800 text-slate-600 line-through opacity-35'
+              : 'bg-slate-900/90 border-rose-500/30 text-rose-200/80'
+          }">
+            <span>${opt.value}</span>
+          </div>
+        `).join('');
+      } else {
+        p2Grid.innerHTML = state.battle.p2Options.map((opt, idx) => {
+          const displayKey = state.p2.eulerInverted ? p2Keys[3 - idx] : p2Keys[idx];
+          return `
+            <button
+              onclick="submitAnswer(2, ${idx})"
+              ${opt.eliminated ? 'disabled' : ''}
+              class="relative py-3 sm:py-4 px-3 rounded-2xl font-math font-extrabold text-xl sm:text-2xl border-2 transition btn-arcade flex items-center justify-center ${
+                opt.eliminated
+                  ? 'bg-slate-900/40 border-slate-800 text-slate-600 line-through opacity-35'
+                  : 'bg-gradient-to-b from-rose-600 to-rose-800 hover:from-rose-500 hover:to-rose-700 border-rose-400/70 text-white shadow-[0_4px_0_#881337]'
+              }">
+              <span class="absolute left-2.5 top-1.5 text-[11px] font-sans font-bold px-1.5 py-0.5 rounded bg-slate-950/60 text-rose-200">${displayKey}</span>
+              <span>${opt.value}</span>
+            </button>
+          `;
+        }).join('');
+      }
+    }
+
+    function handleRoundTimeout() {
+      state.battle.roundLocked = true;
+      clearTimeout(state.battle.aiTimeout);
+      setBanner(`⏰ Tempo esgotado! A resposta era ${state.battle.question.answer}.`, 'text-slate-200 border-slate-500');
+
+      // Registrar na revisão pedagógica
+      state.battle.reviewLog.push({
+        expr: state.battle.question.rawExpr,
+        answer: state.battle.question.answer,
+        reason: '⏰ Tempo esgotado'
+      });
+
+      // Limpar efeito Euler da rodada
+      state.p1.eulerInverted = false;
+      state.p2.eulerInverted = false;
+      updateBattleHUD();
+
+      setTimeout(() => {
+        if (!state.battle.active) return;
+        state.battle.round++;
+        updateBattleHUD();
+        startNewRound();
+      }, 1500);
+    }
+
+    function submitAnswer(playerNum, optionIndex) {
+      if (!state.battle.active || state.battle.roundLocked) return;
+
+      const now = Date.now();
+      const player = playerNum === 1 ? state.p1 : state.p2;
+      const opponent = playerNum === 1 ? state.p2 : state.p1;
+      const oppNum = playerNum === 1 ? 2 : 1;
+
+      // Verificar se está atordoado ou congelado
+      if (now < player.stunnedUntil || now < player.frozenUntil) return;
+
+      const optionsList = playerNum === 1 ? state.battle.p1Options : state.battle.p2Options;
+      const chosen = optionsList[optionIndex];
+      if (!chosen || chosen.eliminated) return;
+
+      if (chosen.value === state.battle.question.answer) {
+        // ACERTOU!
+        state.battle.roundLocked = true;
+        clearInterval(state.battle.timerInterval);
+        clearTimeout(state.battle.aiTimeout);
+
+        const elapsedSec = (now - state.battle.roundStartTime) / 1000;
+        player.hits++;
+        player.streak++;
+        if (player.streak > player.maxStreak) player.maxStreak = player.streak;
+        player.responseTimes.push(elapsedSec);
+
+        // Registrar na revisão pedagógica se o jogador humano demorou > 6.5s para responder
+        if ((playerNum === 1 || state.mode === '2P') && elapsedSec > 6.5) {
+          state.battle.reviewLog.push({
+            expr: state.battle.question.rawExpr,
+            answer: state.battle.question.answer,
+            reason: `⏱️ Resposta lenta (${elapsedSec.toFixed(1)}s)`
+          });
+        }
+
+        // Carrega +34% de energia (ou +40% se estiver Em Chamas!)
+        const energyGain = player.streak >= 3 ? 40 : 34;
+        player.energy = Math.min(100, player.energy + energyGain);
+
+        // Limpa inversão do Euler após responder
+        state.p1.eulerInverted = false;
+        state.p2.eulerInverted = false;
+
+        executeAttack(playerNum, oppNum);
+      } else {
+        // ERROU! Quebra o combo e fica atordoado por 2 segundos
+        SoundFX.wrong();
+        player.streak = 0;
+        player.stunnedUntil = now + 2000;
+        updateBattleHUD();
+
+        // Registrar erro do jogador humano na revisão pedagógica
+        if (playerNum === 1 || state.mode === '2P') {
+          state.battle.reviewLog.push({
+            expr: state.battle.question.rawExpr,
+            answer: state.battle.question.answer,
+            chosen: chosen.value,
+            reason: `❌ Marcou ${chosen.value}`
+          });
+        }
+
+        spawnFloatingText(playerNum, 'ERROU! 💫', 'text-rose-400');
+        setBanner(`❌ Jogador ${playerNum} errou e ficou atordoado por 2s!`, 'text-rose-300 border-rose-500/60');
+        updateLocksUI();
+      }
+    }
+
+    function executeAttack(attackerNum, defenderNum, isAlgorithmInstant = false) {
+      const attacker = attackerNum === 1 ? state.p1 : state.p2;
+      const defender = defenderNum === 1 ? state.p1 : state.p2;
+      const attackerChar = getChar(attackerNum);
+
+      // Animação de avanço do atacante + Projétil Matemático
+      const atkWrap = document.getElementById(`p${attackerNum}-fighter-wrap`);
+      atkWrap.classList.remove('animate-attack-p1', 'animate-attack-p2');
+      void atkWrap.offsetWidth; // Reflow
+      atkWrap.classList.add(attackerNum === 1 ? 'animate-attack-p1' : 'animate-attack-p2');
+      launchProjectile(attackerNum);
+
+      // Verificar Escudo de Hipátia do oponente
+      if (defender.shielded) {
+        defender.shielded = false;
+        SoundFX.shield();
+        spawnFloatingText(defenderNum, 'BLOQUEADO! 🛡️', 'text-cyan-300');
+        setBanner(`🛡️ Escudo Geométrico de ${getChar(defenderNum).name} bloqueou o ataque!`, 'text-cyan-300 border-cyan-400');
+        updateBattleHUD();
+      } else {
+        SoundFX.hit();
+        let dmg = 20;
+        if (attacker.streak >= 3) dmg += 5; // Bônus "Em Chamas"
+        if (attacker.doubleDamage) {
+          dmg *= 2;
+          attacker.doubleDamage = false;
+        }
+
+        // Sofrer dano apaga o fogo do defensor
+        defender.streak = 0;
+        defender.hp = Math.max(0, defender.hp - dmg);
+
+        // Animação de impacto no defensor
+        const defWrap = document.getElementById(`p${defenderNum}-fighter-wrap`);
+        defWrap.classList.remove('animate-hit');
+        void defWrap.offsetWidth;
+        defWrap.classList.add('animate-hit');
+
+        spawnFloatingText(defenderNum, `-${dmg} HP`, dmg >= 30 ? 'text-orange-400' : 'text-rose-400');
+
+        if (!isAlgorithmInstant) {
+          const fireTag = attacker.streak >= 3 ? ' 🔥 EM CHAMAS!' : '';
+          setBanner(
+            `⚔️ ${attackerChar.name} acertou (${state.battle.question.answer}) e causou ${dmg} de dano!${fireTag}`,
+            attackerNum === 1 ? 'text-sky-300 border-sky-400' : 'text-rose-300 border-rose-400'
+          );
+        }
+        updateBattleHUD();
+      }
+
+      // Verificar Fim de Jogo
+      if (defender.hp <= 0) {
+        setTimeout(() => endBattle(attackerNum), 900);
+        return;
+      }
+
+      // Próxima Rodada
+      setTimeout(() => {
+        if (!state.battle.active) return;
+        state.battle.round++;
+        updateBattleHUD();
+        startNewRound();
+      }, 1150);
+    }
+
+    /* =========================================================================
+       8. ATIVAÇÃO DOS 8 PODERES ESPECIAIS ÚNICOS
+       ========================================================================= */
+    function activatePower(playerNum) {
+      if (!state.battle.active || state.battle.roundLocked) return;
+
+      const player = playerNum === 1 ? state.p1 : state.p2;
+      const opponent = playerNum === 1 ? state.p2 : state.p1;
+      const oppNum = playerNum === 1 ? 2 : 1;
+
+      if (player.energy < 100) return;
+
+      SoundFX.power();
+      player.energy = 0;
+      player.powersUsed++;
+
+      const char = getChar(playerNum);
+      spawnFloatingText(playerNum, `${char.powerIcon} ${char.powerName.toUpperCase()}!`, 'text-amber-300');
+
+      switch (char.id) {
+        case 'pythagoras': {
+          // Elimina automaticamente 2 alternativas erradas da conta atual
+          const opts = playerNum === 1 ? state.battle.p1Options : state.battle.p2Options;
+          const ans = state.battle.question.answer;
+          let removed = 0;
+          opts.forEach(o => {
+            if (o.value !== ans && !o.eliminated && removed < 2) {
+              o.eliminated = true;
+              removed++;
+            }
+          });
+          renderBattleOptions();
+          setBanner(`📐 Pitágoras ativou TEOREMA: 2 alternativas erradas eliminadas!`, 'text-amber-300 border-amber-400');
+          break;
+        }
+
+        case 'ada': {
+          // Resolve a conta atual instantaneamente e ataca o oponente
+          state.battle.roundLocked = true;
+          clearInterval(state.battle.timerInterval);
+          clearTimeout(state.battle.aiTimeout);
+          player.hits++;
+          player.responseTimes.push(0.5);
+          state.p1.eulerInverted = false;
+          state.p2.eulerInverted = false;
+          setBanner(`💻 Ada Lovelace executou ALGORITMO: Resposta (${state.battle.question.answer}) instantânea!`, 'text-emerald-300 border-emerald-400');
+          updateBattleHUD();
+          executeAttack(playerNum, oppNum, true);
+          return;
+        }
+
+        case 'gauss': {
+          // Próximo acerto causa o dobro de dano
+          player.doubleDamage = true;
+          setBanner(`🔥 Carl F. Gauss ativou SOMA RÁPIDA: Próximo acerto causará 2x DANO (40 HP)!`, 'text-orange-300 border-orange-400');
+          break;
+        }
+
+        case 'hypatia': {
+          // Bloqueia o próximo ataque e recupera um pouco de vida (+15 HP)
+          player.shielded = true;
+          const heal = 15;
+          player.hp = Math.min(player.maxHp, player.hp + heal);
+          spawnFloatingText(playerNum, `+${heal} HP`, 'text-emerald-400');
+          setBanner(`🛡️ Hipátia ativou ESCUDO GEOMÉTRICO: Próximo ataque bloqueado e +15 HP!`, 'text-cyan-300 border-cyan-400');
+          break;
+        }
+
+        case 'newton': {
+          // Congela a tela/opções do oponente por 4 segundos
+          opponent.frozenUntil = Date.now() + 4000;
+          updateLocksUI();
+          // Se oponente for IA, cancelar ataque agendado e reagendar após descongelar
+          if (oppNum === 2 && state.mode !== '2P') {
+            clearTimeout(state.battle.aiTimeout);
+            setTimeout(() => {
+              if (state.battle.active && !state.battle.roundLocked) scheduleAITurn();
+            }, 4100);
+          }
+          setBanner(`🍎 Isaac Newton ativou GRAVIDADE: Oponente congelado por 4 segundos!`, 'text-sky-300 border-sky-400');
+          break;
+        }
+
+        case 'katherine': {
+          // Adiciona +5 segundos extras e reduz a dificuldade da conta atual
+          const easierDiff = state.difficulty === 'hard' ? 'medium' : 'easy';
+          const q = generateMathProblem(easierDiff);
+          state.battle.question = q;
+          state.battle.p1Options = q.options.map(val => ({ value: val, eliminated: false }));
+          state.battle.p2Options = q.options.map(val => ({ value: val, eliminated: false }));
+          state.battle.timeLeft = Math.min(state.battle.roundDuration + 5, state.battle.timeLeft + 5);
+          document.getElementById('equation-text').textContent = q.text;
+          renderBattleOptions();
+          updateTimerDisplay();
+          setBanner(`🚀 Katherine Johnson ativou TRAJETÓRIA: +5s extras e conta simplificada!`, 'text-sky-300 border-sky-400');
+          break;
+        }
+
+        case 'euler': {
+          // Embaralha opções do oponente e inverte os controles dele por 1 rodada
+          opponent.eulerInverted = true;
+          const oppOpts = oppNum === 1 ? state.battle.p1Options : state.battle.p2Options;
+          oppOpts.sort(() => Math.random() - 0.5);
+          renderBattleOptions();
+          setBanner(`🌀 Leonhard Euler ativou CONSTANTE: Opções embaralhadas e controles do oponente invertidos!`, 'text-purple-300 border-purple-400');
+          break;
+        }
+
+        case 'noether': {
+          // Rouba 50% da barra de energia do oponente para si
+          const stolen = Math.floor(opponent.energy * 0.5);
+          opponent.energy = Math.max(0, opponent.energy - stolen);
+          player.energy = Math.min(100, player.energy + stolen);
+          setBanner(`⚖️ Emmy Noether ativou SIMETRIA: Roubou ${stolen}% de energia do oponente!`, 'text-pink-300 border-pink-400');
+          break;
+        }
+      }
+
+      updateBattleHUD();
+    }
+
+    /* =========================================================================
+       9. INTELIGÊNCIA ARTIFICIAL (MODO 1 JOGADOR E CAMPANHA)
+       ========================================================================= */
+    function scheduleAITurn() {
+      if (state.mode === '2P' || !state.battle.active || state.battle.roundLocked) return;
+      clearTimeout(state.battle.aiTimeout);
+
+      // Se IA tem 100% de energia, usa o poder após 1.2s
+      if (state.p2.energy >= 100) {
+        state.battle.aiTimeout = setTimeout(() => {
+          if (!state.battle.active || state.battle.roundLocked) return;
+          if (Date.now() < state.p2.frozenUntil) return;
+          activatePower(2);
+          if (!state.battle.roundLocked) scheduleAITurn();
+        }, 1200);
+        return;
+      }
+
+      // Tempo de reação e taxa de acerto da IA conforme dificuldade (e fase do torneio)
+      const baseAiConfig = {
+        easy: { minMs: 4200, maxMs: 7200, accuracy: 0.72 },
+        medium: { minMs: 2800, maxMs: 5200, accuracy: 0.85 },
+        hard: { minMs: 1800, maxMs: 3600, accuracy: 0.94 }
+      }[state.difficulty];
+
+      const stageSpeedup = state.mode === 'CAMPAIGN' ? state.campaign.stage * 280 : 0;
+      const minMs = Math.max(1300, baseAiConfig.minMs - stageSpeedup);
+      const maxMs = Math.max(2200, baseAiConfig.maxMs - stageSpeedup);
+      const delay = randInt(minMs, maxMs);
+
+      state.battle.aiTimeout = setTimeout(() => {
+        if (!state.battle.active || state.battle.roundLocked) return;
+        const now = Date.now();
+        if (now < state.p2.frozenUntil || now < state.p2.stunnedUntil) {
+          scheduleAITurn();
+          return;
+        }
+
+        const ans = state.battle.question.answer;
+        const opts = state.battle.p2Options;
+        const willHit = Math.random() < baseAiConfig.accuracy;
+
+        let chosenIdx = opts.findIndex(o => o.value === ans && !o.eliminated);
+        if (!willHit || chosenIdx === -1) {
+          const wrongIndices = opts
+            .map((o, i) => (o.value !== ans && !o.eliminated ? i : -1))
+            .filter(i => i !== -1);
+          if (wrongIndices.length > 0) {
+            chosenIdx = wrongIndices[randInt(0, wrongIndices.length - 1)];
+          }
+        }
+
+        if (chosenIdx !== -1) {
+          submitAnswer(2, chosenIdx);
+          // Se IA errou e ficou atordoada, reagendar tentativa após 2.1s
+          if (!state.battle.roundLocked) {
+            setTimeout(() => scheduleAITurn(), 2150);
+          }
+        }
+      }, delay);
+    }
+
+    /* =========================================================================
+       10. TELA FINAL DE VITÓRIA, REVISÃO PEDAGÓGICA E DESBLOQUEIO DE SKINS
+       ========================================================================= */
+    function endBattle(winnerNum) {
+      stopBattleLoops();
+      SoundFX.victory();
+
+      const winnerChar = getChar(winnerNum);
+      const winnerSkin = winnerNum === 1 ? state.p1.skin : state.p2.skin;
+      const isCampaign = state.mode === 'CAMPAIGN';
+
+      document.getElementById('victory-avatar').innerHTML = winnerChar.renderAvatar(winnerSkin);
+
+      const unlockBanner = document.getElementById('skin-unlock-banner');
+      const btnNextStage = document.getElementById('btn-next-stage');
+      const btnReplay = document.getElementById('btn-replay');
+      unlockBanner.classList.add('hidden');
+      btnNextStage.classList.add('hidden');
+      btnReplay.classList.remove('hidden');
+
+      let winnerLabel = '';
+      let subtitle = `${winnerChar.name} triunfou no Duelo dos Matemáticos!`;
+
+      if (isCampaign && winnerNum === 1) {
+        const defeatedChar = getChar(2);
+        const newlyUnlocked = saveUnlockedSkin(defeatedChar.id);
+        if (newlyUnlocked) {
+          unlockBanner.textContent = `✨ NOVA SKIN DESBLOQUEADA: ${defeatedChar.name} (${defeatedChar.skins[1].name})!`;
+          unlockBanner.classList.remove('hidden');
+        }
+
+        if (state.campaign.stage < 3) {
+          winnerLabel = `Vitória na Luta ${state.campaign.stage + 1} de 4!`;
+          subtitle = `Você derrotou ${defeatedChar.name} e recuperou +40 HP para o próximo desafio!`;
+          btnNextStage.classList.remove('hidden');
+          btnReplay.classList.add('hidden');
+        } else {
+          winnerLabel = '🏆 CAMPEÃO DO TORNEIO!';
+          subtitle = `Parabéns! Você venceu todos os 4 gênios matemáticos!`;
+        }
+      } else {
+        winnerLabel = winnerNum === 1
+          ? 'Jogador 1 Venceu!'
+          : (state.mode === '2P' ? 'Jogador 2 Venceu!' : 'A Máquina (IA) Venceu!');
+      }
+
+      document.getElementById('victory-title').textContent = winnerLabel;
+      document.getElementById('victory-subtitle').textContent = subtitle;
+
+      // Estatísticas P1
+      const avg1 = state.p1.responseTimes.length
+        ? (state.p1.responseTimes.reduce((a, b) => a + b, 0) / state.p1.responseTimes.length).toFixed(2) + 's'
+        : '--';
+      document.getElementById('stat-p1-char').textContent = getChar(1).name;
+      document.getElementById('stat-p1-hits').textContent = state.p1.hits;
+      document.getElementById('stat-p1-avg').textContent = avg1;
+      document.getElementById('stat-p1-powers').textContent = `${state.p1.maxStreak}x / ${state.p1.powersUsed}`;
+
+      // Estatísticas P2
+      const avg2 = state.p2.responseTimes.length
+        ? (state.p2.responseTimes.reduce((a, b) => a + b, 0) / state.p2.responseTimes.length).toFixed(2) + 's'
+        : '--';
+      document.getElementById('stat-p2-label').textContent = state.mode === '2P' ? 'JOGADOR 2' : (isCampaign ? 'CHEFE IA' : 'OPONENTE IA');
+      document.getElementById('stat-p2-char').textContent = getChar(2).name;
+      document.getElementById('stat-p2-hits').textContent = state.p2.hits;
+      document.getElementById('stat-p2-avg').textContent = avg2;
+      document.getElementById('stat-p2-powers').textContent = `${state.p2.maxStreak}x / ${state.p2.powersUsed}`;
+
+      // Renderizar Revisão Pedagógica
+      const reviewListEl = document.getElementById('pedagogical-review-list');
+      const reviewBadgeEl = document.getElementById('review-count-badge');
+      if (state.battle.reviewLog.length === 0) {
+        reviewBadgeEl.textContent = '100% Preciso!';
+        reviewListEl.innerHTML = `<div class="text-emerald-300 font-semibold py-1">🌟 Excelente desempenho! Nenhum erro ou demora registrado nesta partida.</div>`;
+      } else {
+        reviewBadgeEl.textContent = `${state.battle.reviewLog.length} ponto(s) de atenção`;
+        reviewListEl.innerHTML = state.battle.reviewLog.map(item => `
+          <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-700/80">
+            <span class="font-math font-bold text-white">${item.expr} = <span class="text-emerald-400">${item.answer}</span></span>
+            <span class="text-amber-300 font-semibold">${item.reason}</span>
+          </div>
+        `).join('');
+      }
+
+      showScreen('screen-victory');
+    }
+
+    /* =========================================================================
+       11. CONTROLES DE TECLADO (X2 LOCAL E 1P)
+       ========================================================================= */
+    window.addEventListener('keydown', (e) => {
+      if (!state.battle.active || state.battle.roundLocked) return;
+
+      const key = e.key.toLowerCase();
+
+      // Jogador 1: A, S, D, F (alternativas) e Q (poder)
+      const p1Map = { a: 0, s: 1, d: 2, f: 3 };
+      if (key in p1Map) {
+        e.preventDefault();
+        let idx = p1Map[key];
+        if (state.p1.eulerInverted) idx = 3 - idx;
+        submitAnswer(1, idx);
+        return;
+      }
+      if (key === 'q') {
+        e.preventDefault();
+        activatePower(1);
+        return;
+      }
+
+      // Jogador 2 (apenas no modo 2P): J, K, L, Ç ou Setas e P (poder)
+      if (state.mode === '2P') {
+        const p2Map = {
+          j: 0, k: 1, l: 2, 'ç': 3, ';': 3,
+          arrowleft: 0, arrowdown: 1, arrowup: 2, arrowright: 3
+        };
+        if (key in p2Map) {
+          e.preventDefault();
+          let idx = p2Map[key];
+          if (state.p2.eulerInverted) idx = 3 - idx;
+          submitAnswer(2, idx);
+          return;
+        }
+        if (key === 'p') {
+          e.preventDefault();
+          activatePower(2);
+          return;
+        }
+      }
+    });
+
+    /* =========================================================================
+       12. INICIALIZAÇÃO DA PÁGINA
+       ========================================================================= */
+    window.onload = () => {
+      // Preencher preview dos 8 matemáticos na tela inicial
+      const previewEl = document.getElementById('home-roster-preview');
+      previewEl.innerHTML = MATHEMATICIANS.map(m => `
+        <div class="flex flex-col items-center bg-slate-800/70 border border-slate-700/80 px-3 py-2 rounded-2xl">
+          <div class="w-12 h-12 sm:w-14 sm:h-14">${m.renderAvatar(0)}</div>
+          <span class="text-xs font-bold text-slate-200 mt-1">${m.name.split(' ')[0]}</span>
+          <span class="text-[10px] text-amber-300">${m.powerIcon} ${m.powerName}</span>
+        </div>
+      `).join('');
+    };
+  </script>
+</body>
+</html>
