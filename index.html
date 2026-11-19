@@ -223,24 +223,10 @@
         const listaDeJogos = [
             {
                 titulo: "Duelo das contas",
-                descrição: "Jogo de duelo aritmético"
+                descricao: "Jogo de duelo aritmético",
                 categoria: "Aritmética",
                 autores: "Professor",
-                arquivo: "duelo_dos_matem_ticos (2).html" // Nome exato do arquivo enviado ao GitHub
-            },
-            {
-                titulo: "Desafio das Equações",
-                descricao: "Resolva equações de 1º grau contra o tempo para desarmar a bomba.",
-                categoria: "Álgebra",
-                autores: "Lucas, Mariana e Gabriel (8º Ano B)",
-                arquivo: "desafio-equacoes.html"
-            },
-            {
-                titulo: "Corrida das Frações",
-                descricao: "Compare frações equivalentes para fazer seu carro acelerar até a linha de chegada.",
-                categoria: "Aritmética",
-                autores: "Sofia e Pedro Henrique (7º Ano A)",
-                arquivo: "corrida-fracoes.html"
+                arquivo: "duelo.html"
             }
         ];
         // =====================================================================
@@ -258,7 +244,7 @@
                 const bateCategoria = categoriaAtual === 'todos' || jogo.categoria === categoriaAtual;
                 const bateBusca = jogo.titulo.toLowerCase().includes(termo) || 
                                   jogo.autores.toLowerCase().includes(termo) ||
-                                  jogo.descricao.toLowerCase().includes(termo);
+                                  (jogo.descricao && jogo.descricao.toLowerCase().includes(termo));
                 return bateCategoria && bateBusca;
             });
 
@@ -274,7 +260,7 @@
                     <div>
                         <span class="tag">${jogo.categoria}</span>
                         <h2>${jogo.titulo}</h2>
-                        <p>${jogo.descricao}</p>
+                        <p>${jogo.descricao || ""}</p>
                     </div>
                     <div>
                         <div class="authors"><strong>Criado por:</strong> ${jogo.autores}</div>
