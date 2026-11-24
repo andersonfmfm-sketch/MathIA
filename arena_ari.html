@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Arena 1v1 & Solo - 6º Ano</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js para efeitos sonoros e trilha 8-bit -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonte Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f2fe; /* Azul claro suave */
+        }
+        .bg-pattern {
+            background-image: radial-gradient(#bae6fd 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        @keyframes pulse-light {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .pulse-active {
+            animation: pulse-light 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-pattern text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- CABEÇALHO COM CONTROLE DE ÁUDIO -->
+    <header class="w-full max-w-5xl mx-auto p-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span class="text-3xl">🧮</span>
+            <h1 class="text-xl md:text-2xl font-black text-sky-900 tracking-tight">MATH ARENA <span class="text-sky-600 text-sm font-semibold">6º ANO</span></h1>
+        </div>
+        <div class="flex gap-2">
+            <button id="btn-toggle-music" onclick="window.toggleMusic()" class="bg-sky-200 hover:bg-sky-300 text-sky-800 font-bold px-3 py-2 rounded-xl text-sm flex items-center gap-1 transition-all">
+                <span id="music-icon">🎵</span> <span id="music-status">Música: ON</span>
+            </button>
+            <button id="btn-toggle-sound" onclick="window.toggleSound()" class="bg-sky-200 hover:bg-sky-300 text-sky-800 font-bold px-3 py-2 rounded-xl text-sm flex items-center gap-1 transition-all">
+                <span id="sound-icon">🔊</span> <span id="sound-status">SFX: ON</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL DO JOGO -->
+    <main class="w-full max-w-4xl mx-auto p-4 flex-grow flex flex-col justify-center">
+
+        <!-- TELA 1: SELEÇÃO DE MODO -->
+        <div id="screen-mode" class="bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-sky-200 max-w-xl mx-auto text-center w-full">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-sky-900 mb-2">Selecione o Modo de Jogo</h2>
+            <p class="text-sky-700 text-sm mb-6">Desafios do 6º Ano: Operações, Frações e Porcentagem!</p>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="window.selectMode('solo')" class="group p-5 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-bold rounded-2xl shadow-md transition-all duration-200 transform hover:-translate-y-1 flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="text-lg font-black flex items-center gap-2">🤖 Solo (vs Máquina)</div>
+                        <div class="text-xs text-sky-100 font-normal">Treine sozinho contra o robô calculador</div>
+                    </div>
+                    <span class="text-2xl group-hover:translate-x-1 transition-transform">➡️</span>
+                </button>
+
+                <button onclick="window.selectMode('local')" class="group p-5 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-2xl shadow-md transition-all duration-200 transform hover:-translate-y-1 flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="text-lg font-black flex items-center gap-2">🖥️ Multiplayer (Mesmo PC)</div>
+                        <div class="text-xs text-emerald-100 font-normal">2 jogadores na mesma tela trocando turnos</div>
+                    </div>
+                    <span class="text-2xl group-hover:translate-x-1 transition-transform">➡️</span>
+                </button>
+
+                <button onclick="window.selectMode('online')" class="group p-5 bg-gradient-to-r from-indigo-400 to-purple-500 hover:from-indigo-500 hover:to-purple-600 text-white font-bold rounded-2xl shadow-md transition-all duration-200 transform hover:-translate-y-1 flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="text-lg font-black flex items-center gap-2">🌐 Multiplayer Online</div>
+                        <div class="text-xs text-indigo-100 font-normal">Crie uma sala ou entre com código em PCs diferentes</div>
+                    </div>
+                    <span class="text-2xl group-hover:translate-x-1 transition-transform">➡️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TELA ONLINE LOBBY -->
+        <div id="screen-online-lobby" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-sky-200 max-w-xl mx-auto text-center w-full">
+            <h2 class="text-2xl font-extrabold text-sky-900 mb-4">Multiplayer Online</h2>
+            <div class="space-y-6">
+                <div class="p-4 bg-sky-50 rounded-2xl border border-sky-200">
+                    <h3 class="font-bold text-sky-900 mb-2">Criar Nova Sala</h3>
+                    <button onclick="window.createRoom()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow transition">Criar Sala</button>
+                </div>
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-sky-200"></div>
+                    <span class="flex-shrink mx-4 text-sky-400 font-bold text-xs">OU</span>
+                    <div class="flex-grow border-t border-sky-200"></div>
+                </div>
+                <div class="p-4 bg-sky-50 rounded-2xl border border-sky-200">
+                    <h3 class="font-bold text-sky-900 mb-2">Entrar em uma Sala</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-room-code" placeholder="Código de 4 letras" maxlength="4" class="w-full uppercase tracking-widest text-center px-4 py-3 rounded-xl border border-sky-300 font-mono font-bold text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button onclick="window.joinRoom()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">Entrar</button>
+                    </div>
+                </div>
+                <button onclick="window.backToModeSelect()" class="text-sky-600 hover:text-sky-800 font-bold text-sm">⬅️ Voltar ao Menu Principal</button>
+            </div>
+        </div>
+
+        <!-- TELA SELEÇÃO DE PERSONAGENS -->
+        <div id="screen-char-select" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-sky-200 max-w-3xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="window.backToModeSelect()" class="text-sky-600 hover:text-sky-800 font-bold text-sm">⬅️ Voltar</button>
+                <h2 id="char-select-title" class="text-xl font-extrabold text-sky-900 text-center">Escolha os Personagens</h2>
+                <div class="w-12"></div>
+            </div>
+
+            <!-- SELEÇÕES DOS JOGADORES -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- P1 -->
+                <div class="bg-sky-50 p-4 rounded-2xl border-2 border-sky-300">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-extrabold text-sky-900">Jogador 1</span>
+                        <span id="p1-selected-name" class="text-xs bg-sky-200 text-sky-800 px-2 py-1 rounded-md font-bold">Nenhum</span>
+                    </div>
+                    <div id="p1-char-grid" class="grid grid-cols-5 gap-2"></div>
+                </div>
+                <!-- P2 -->
+                <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-300">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-extrabold text-emerald-900">Jogador 2</span>
+                        <span id="p2-selected-name" class="text-xs bg-emerald-200 text-emerald-800 px-2 py-1 rounded-md font-bold">Nenhum</span>
+                    </div>
+                    <div id="p2-char-grid" class="grid grid-cols-5 gap-2"></div>
+                </div>
+            </div>
+
+            <button id="btn-start-game" onclick="window.startGame()" disabled class="w-full bg-emerald-500 disabled:bg-slate-300 text-white font-black text-lg py-4 rounded-2xl shadow-lg transition duration-200 uppercase tracking-wider hover:bg-emerald-600">
+                Iniciar Batalha! 🚀
+            </button>
+        </div>
+
+        <!-- TELA DA ARENA DE BATALHA -->
+        <div id="screen-arena" class="hidden flex flex-col gap-4 w-full max-w-3xl mx-auto">
+            
+            <!-- PLACAR DE JOGADORES -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- CARD P1 -->
+                <div id="card-p1" class="bg-white/90 p-4 rounded-2xl border-4 border-sky-400 shadow-md transition-all duration-300">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span id="arena-p1-avatar" class="text-3xl">👤</span>
+                            <div>
+                                <h3 id="arena-p1-name" class="font-black text-sky-900 text-sm md:text-base">P1</h3>
+                                <div class="text-xs text-sky-600 font-bold">Fase <span id="arena-p1-phase">1</span></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 font-bold">QI</div>
+                            <div id="arena-p1-qi" class="text-xl font-black text-sky-600">0</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 text-red-500 text-lg" id="arena-p1-lives">❤️❤️❤️</div>
+                </div>
+
+                <!-- CARD P2 -->
+                <div id="card-p2" class="bg-white/90 p-4 rounded-2xl border-4 border-slate-200 opacity-60 shadow-md transition-all duration-300">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span id="arena-p2-avatar" class="text-3xl">🤖</span>
+                            <div>
+                                <h3 id="arena-p2-name" class="font-black text-slate-900 text-sm md:text-base">P2</h3>
+                                <div class="text-xs text-slate-600 font-bold">Fase <span id="arena-p2-phase">1</span></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 font-bold">QI</div>
+                            <div id="arena-p2-qi" class="text-xl font-black text-emerald-600">0</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 text-red-500 text-lg" id="arena-p2-lives">❤️❤️❤️</div>
+                </div>
+            </div>
+
+            <!-- CARD DA QUESTÃO CENTRAL -->
+            <div class="bg-white rounded-3xl p-6 shadow-xl border border-sky-200 text-center relative overflow-hidden">
+                <!-- BARRA DE TEMPO (1 MINUTO) -->
+                <div class="w-full bg-slate-100 rounded-full h-3 mb-4 overflow-hidden">
+                    <div id="timer-bar" class="bg-sky-500 h-full w-full transition-all duration-1000"></div>
+                </div>
+                
+                <div class="flex justify-between items-center text-xs font-bold text-sky-700 mb-4 px-2">
+                    <span id="current-player-indicator">TURNO DE: JOGADOR 1</span>
+                    <span>⏱️ <span id="timer-text">60</span>s</span>
+                    <span id="difficulty-badge" class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase">Fácil</span>
+                </div>
+
+                <!-- QUESTÃO -->
+                <div class="my-6">
+                    <div id="question-text" class="text-2xl md:text-4xl font-black text-slate-800 tracking-wide">
+                        Carregando...
+                    </div>
+                </div>
+
+                <!-- OPÇÕES (A, B, C, D) -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Opções geradas via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA DE FIM DE JOGO -->
+        <div id="screen-game-over" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-sky-200 max-w-md mx-auto text-center w-full">
+            <div id="winner-avatar" class="text-6xl mb-2">🏆</div>
+            <h2 id="winner-title" class="text-3xl font-black text-sky-900 mb-1">GG!</h2>
+            <p id="winner-subtitle" class="text-sm font-semibold text-sky-700 mb-4">Você venceu a partida!</p>
+            
+            <div class="bg-sky-50 p-4 rounded-2xl mb-6 border border-sky-200">
+                <p id="taunt-message" class="text-lg font-extrabold text-indigo-900 italic">"Facil demais!"</p>
+            </div>
+
+            <button onclick="window.location.reload()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-black py-4 rounded-2xl shadow-lg transition">
+                Jogar Novamente 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="w-full text-center p-4 text-xs font-semibold text-sky-700">
+        Jogo Educativo de Matemática 6º Ano • Operações, Frações e Porcentagem
+    </footer>
+
+    <!-- LÓGICA DO JOGO -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForDemoPurposesOnly12345",
+            authDomain: "math-arena-6ano.firebaseapp.com",
+            projectId: "math-arena-6ano",
+            storageBucket: "math-arena-6ano.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // LISTA DE PERSONAGENS
+        const CHARACTERS = [
+            { id: 'lula', name: 'Lula', avatar: '🦑' },
+            { id: 'bolsonaro', name: 'Bolsonaro', avatar: '🦅' },
+            { id: 'leon', name: 'Leon S. Kennedy', avatar: '🦁' },
+            { id: 'einstein', name: 'Einstein', avatar: '🧠' },
+            { id: 'tesla', name: 'Nikola Tesla', avatar: '⚡' }
+        ];
+
+        // MENSAGENS AO VENCER/PERDER
+        const WIN_TAUNTS = [
+            "GG!",
+            "Fácil demais!",
+            "Ganhei daquele burro ali!",
+            "Foi um bom treino!",
+            "Matemática dominada com sucesso!"
+        ];
+
+        const LOSE_TAUNTS = [
+            "Que azar! Tente novamente na próxima!",
+            "Matemática requer um pouco mais de treino!",
+            "E se for chorar manda áudio!",
+            "Mais sorte na próxima rodada!",
+            "Derrotado! Precisa revisar as expressões numéricas!"
+        ];
+
+        // ESTADO GLOBAL DO JOGO
+        let soundEnabled = true;
+        let musicEnabled = true;
+        let isMusicPlaying = false;
+
+        let gameMode = 'solo'; // 'solo', 'local', 'online'
+        let roomCode = null;
+        let roomRef = null;
+        let isHost = true;
+
+        let currentPlayerTurn = 1; // 1 ou 2
+        let timer = 60;
+        let timerInterval = null;
+        let currentQuestion = null;
+
+        let p1 = { id: null, name: 'Jogador 1', avatar: '👤', lives: 3, qi: 0, phase: 1 };
+        let p2 = { id: null, name: 'Jogador 2', avatar: '🤖', lives: 3, qi: 0, phase: 1 };
+
+        // SISTEMA DE ÁUDIO COM TONE.JS
+        let synth = null;
+        let polySynth = null;
+        let bgLoop = null;
+
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth().toDestination();
+                polySynth = new Tone.PolySynth().toDestination();
+                
+                // Trilha de Fundo 8-bits calma (C-Major scale pattern)
+                const notes = ["C4", "E4", "G4", "B4", "C5", "G4", "E4", "C4"];
+                let step = 0;
+                bgLoop = new Tone.Loop(time => {
+                    if (musicEnabled && isMusicPlaying) {
+                        polySynth.triggerAttackRelease(notes[step % notes.length], "8n", time, 0.1);
+                        step++;
+                    }
+                }, "4n");
+                Tone.Transport.bpm.value = 90;
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            Tone.start();
+
+            if (type === 'click') {
+                synth.triggerAttackRelease("C5", "16n");
+            } else if (type === 'correct') {
+                polySynth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
+            } else if (type === 'wrong') {
+                synth.triggerAttackRelease("G2", "8n");
+            } else if (type === 'win') {
+                polySynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n");
+            }
+        }
+
+        window.toggleSound = function() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-status').innerText = soundEnabled ? "SFX: ON" : "SFX: OFF";
+            document.getElementById('sound-icon').innerText = soundEnabled ? "🔊" : "🔇";
+        };
+
+        window.toggleMusic = function() {
+            musicEnabled = !musicEnabled;
+            document.getElementById('music-status').innerText = musicEnabled ? "Música: ON" : "Música: OFF";
+            document.getElementById('music-icon').innerText = musicEnabled ? "🎵" : "🔇";
+
+            if (musicEnabled) {
+                initAudio();
+                Tone.start();
+                Tone.Transport.start();
+                if (bgLoop) bgLoop.start(0);
+                isMusicPlaying = true;
+            } else {
+                if (bgLoop) bgLoop.stop();
+                isMusicPlaying = false;
+            }
+        };
+
+        // NAVEGAÇÃO DE MODO
+        window.selectMode = function(mode) {
+            playSound('click');
+            gameMode = mode;
+            document.getElementById('screen-mode').classList.add('hidden');
+
+            if (mode === 'online') {
+                document.getElementById('screen-online-lobby').classList.remove('hidden');
+            } else {
+                setupCharacterSelectScreen();
+            }
+        };
+
+        window.backToModeSelect = function() {
+            playSound('click');
+            document.getElementById('screen-online-lobby').classList.add('hidden');
+            document.getElementById('screen-char-select').classList.add('hidden');
+            document.getElementById('screen-mode').classList.remove('hidden');
+        };
+
+        function setupCharacterSelectScreen() {
+            document.getElementById('screen-char-select').classList.remove('hidden');
+            const title = document.getElementById('char-select-title');
+            
+            p1.id = null;
+            p2.id = null;
+
+            if (gameMode === 'solo') {
+                title.innerText = "Escolha seu Personagem (Solo vs Máquina)";
+                p2.id = 'einstein'; 
+                p2.name = "Robô Matemático";
+                p2.avatar = '🧠';
+            } else if (gameMode === 'local') {
+                title.innerText = "Escolha os Personagens (Mesmo PC)";
+            } else if (gameMode === 'online') {
+                title.innerText = isHost ? "Jogador 1: Escolha seu Personagem" : "Jogador 2: Escolha seu Personagem";
+            }
+
+            renderCharSelection();
+            checkCanStartGame();
+        }
+
+        function renderCharSelection() {
+            const p1Grid = document.getElementById('p1-char-grid');
+            const p2Grid = document.getElementById('p2-char-grid');
+
+            p1Grid.innerHTML = '';
+            p2Grid.innerHTML = '';
+
+            document.getElementById('p1-selected-name').innerText = p1.name || "Nenhum";
+            document.getElementById('p2-selected-name').innerText = p2.name || "Nenhum";
+
+            CHARACTERS.forEach(char => {
+                // Botão P1
+                const btn1 = document.createElement('button');
+                const isP2Choice = p2.id === char.id;
+                btn1.disabled = isP2Choice || (gameMode === 'online' && !isHost);
+                btn1.className = `p-2 text-2xl rounded-xl border-2 transition ${p1.id === char.id ? 'bg-sky-500 border-sky-700 text-white scale-110' : 'bg-white border-sky-200'} ${isP2Choice ? 'opacity-30 cursor-not-allowed' : 'hover:border-sky-400'}`;
+                btn1.innerText = char.avatar;
+                btn1.title = char.name;
+                btn1.onclick = () => window.selectChar(1, char.id);
+                p1Grid.appendChild(btn1);
+
+                // Botão P2
+                const btn2 = document.createElement('button');
+                const isP1Choice = p1.id === char.id;
+                btn2.disabled = isP1Choice || gameMode === 'solo' || (gameMode === 'online' && isHost);
+                btn2.className = `p-2 text-2xl rounded-xl border-2 transition ${p2.id === char.id ? 'bg-emerald-500 border-emerald-700 text-white scale-110' : 'bg-white border-emerald-200'} ${isP1Choice || gameMode === 'solo' ? 'opacity-30 cursor-not-allowed' : 'hover:border-emerald-400'}`;
+                btn2.innerText = char.avatar;
+                btn2.title = char.name;
+                btn2.onclick = () => window.selectChar(2, char.id);
+                p2Grid.appendChild(btn2);
+            });
+        }
+
+        window.selectChar = function(playerNum, charId) {
+            playSound('click');
+            
+            if (playerNum === 1 && p2.id === charId) return;
+            if (playerNum === 2 && p1.id === charId) return;
+
+            const char = CHARACTERS.find(c => c.id === charId);
+            if (!char) return;
+
+            if (playerNum === 1) {
+                p1.id = char.id;
+                p1.name = char.name;
+                p1.avatar = char.avatar;
+            } else {
+                p2.id = char.id;
+                p2.name = char.name;
+                p2.avatar = char.avatar;
+            }
+
+            renderCharSelection();
+            checkCanStartGame();
+        };
+
+        function checkCanStartGame() {
+            const btn = document.getElementById('btn-start-game');
+            if (!btn) return;
+
+            if (gameMode === 'solo') {
+                btn.disabled = !p1.id;
+            } else {
+                btn.disabled = !(p1.id && p2.id);
+            }
+        }
+
+        // SALAS MULTIPLAYER ONLINE
+        window.createRoom = function() {
+            playSound('click');
+            roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            isHost = true;
+            alert(`Sala Criada! Código: ${roomCode}. Compartilhe com o outro jogador.`);
+            setupCharacterSelectScreen();
+        };
+
+        window.joinRoom = function() {
+            playSound('click');
+            const codeInput = document.getElementById('input-room-code').value.trim().toUpperCase();
+            if (codeInput.length !== 4) {
+                alert("Digite um código de sala válido com 4 letras.");
+                return;
+            }
+            roomCode = codeInput;
+            isHost = false;
+            setupCharacterSelectScreen();
+        };
+
+        // GERAÇÃO DE QUESTÕES DO 6º ANO
+        function generateQuestion(phase) {
+            let qText = "";
+            let correctAns = 0;
+            let options = [];
+
+            // Dificuldade por Fase
+            // Fases 1-2: Fácil (Adição e Subtração)
+            // Fases 3-5: Médio (Multiplicação)
+            // Fases 6+: Difícil (Divisão, Frações e Porcentagens)
+            let category = "facil";
+            if (phase >= 3 && phase <= 5) category = "medio";
+            if (phase >= 6) category = "dificil";
+
+            if (category === "facil") {
+                const isAdd = Math.random() > 0.5;
+                const n1 = Math.floor(Math.random() * 50) + 10;
+                const n2 = Math.floor(Math.random() * 40) + 5;
+                if (isAdd) {
+                    qText = `${n1} + ${n2} = ?`;
+                    correctAns = n1 + n2;
+                } else {
+                    const maxN = Math.max(n1, n2);
+                    const minN = Math.min(n1, n2);
+                    qText = `${maxN} - ${minN} = ?`;
+                    correctAns = maxN - minN;
+                }
+            } else if (category === "medio") {
+                const n1 = Math.floor(Math.random() * 12) + 2;
+                const n2 = Math.floor(Math.random() * 12) + 2;
+                qText = `${n1} × ${n2} = ?`;
+                correctAns = n1 * n2;
+            } else {
+                const type = Math.floor(Math.random() * 3);
+                if (type === 0) { // Divisão Exata
+                    const divisor = Math.floor(Math.random() * 9) + 2;
+                    correctAns = Math.floor(Math.random() * 12) + 2;
+                    const dividendo = divisor * correctAns;
+                    qText = `${dividendo} ÷ ${divisor} = ?`;
+                } else if (type === 1) { // Porcentagem Simples (10%, 20%, 50%)
+                    const perc = [10, 20, 50][Math.floor(Math.random() * 3)];
+                    const base = (Math.floor(Math.random() * 10) + 1) * 20;
+                    qText = `${perc}% de ${base} = ?`;
+                    correctAns = (perc / 100) * base;
+                } else { // Fração simples de um número
+                    const base = (Math.floor(Math.random() * 8) + 1) * 4;
+                    qText = `1/4 de ${base} = ?`;
+                    correctAns = base / 4;
+                }
+            }
+
+            options.push(correctAns);
+            while (options.length < 4) {
+                let offset = (Math.floor(Math.random() * 10) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                let wrongAns = correctAns + offset;
+                if (wrongAns >= 0 && !options.includes(wrongAns)) {
+                    options.push(wrongAns);
+                }
+            }
+
+            options.sort(() => Math.random() - 0.5);
+
+            return {
+                text: qText,
+                correctAns: correctAns,
+                options: options,
+                category: category
+            };
+        }
+
+        // INÍCIO DO JOGO
+        window.startGame = function() {
+            playSound('click');
+
+            if (musicEnabled && !isMusicPlaying) {
+                initAudio();
+                Tone.start();
+                Tone.Transport.start();
+                if (bgLoop) bgLoop.start(0);
+                isMusicPlaying = true;
+            }
+
+            p1.lives = 3;
+            p1.qi = 0;
+            p1.phase = 1;
+
+            p2.lives = 3;
+            p2.qi = 0;
+            p2.phase = 1;
+
+            currentPlayerTurn = 1;
+
+            document.getElementById('screen-char-select').classList.add('hidden');
+            document.getElementById('screen-arena').classList.remove('hidden');
+
+            updateArenaUI();
+            nextTurn();
+        };
+
+        function updateArenaUI() {
+            document.getElementById('arena-p1-name').innerText = p1.name;
+            document.getElementById('arena-p1-avatar').innerText = p1.avatar;
+            document.getElementById('arena-p1-qi').innerText = p1.qi;
+            document.getElementById('arena-p1-phase').innerText = p1.phase;
+            document.getElementById('arena-p1-lives').innerText = '❤️'.repeat(Math.max(0, p1.lives));
+
+            document.getElementById('arena-p2-name').innerText = p2.name;
+            document.getElementById('arena-p2-avatar').innerText = p2.avatar;
+            document.getElementById('arena-p2-qi').innerText = p2.qi;
+            document.getElementById('arena-p2-phase').innerText = p2.phase;
+            document.getElementById('arena-p2-lives').innerText = '❤️'.repeat(Math.max(0, p2.lives));
+
+            const cardP1 = document.getElementById('card-p1');
+            const cardP2 = document.getElementById('card-p2');
+
+            if (currentPlayerTurn === 1) {
+                cardP1.classList.remove('opacity-60', 'border-slate-200');
+                cardP1.classList.add('border-sky-500', 'pulse-active');
+                cardP2.classList.add('opacity-60', 'border-slate-200');
+                cardP2.classList.remove('border-emerald-500', 'pulse-active');
+                document.getElementById('current-player-indicator').innerText = `TURNO DE: ${p1.name.toUpperCase()}`;
+            } else {
+                cardP2.classList.remove('opacity-60', 'border-slate-200');
+                cardP2.classList.add('border-emerald-500', 'pulse-active');
+                cardP1.classList.add('opacity-60', 'border-slate-200');
+                cardP1.classList.remove('border-sky-500', 'pulse-active');
+                document.getElementById('current-player-indicator').innerText = `TURNO DE: ${p2.name.toUpperCase()}`;
+            }
+        }
+
+        function nextTurn() {
+            updateArenaUI();
+
+            const activePlayer = currentPlayerTurn === 1 ? p1 : p2;
+            currentQuestion = generateQuestion(activePlayer.phase);
+
+            document.getElementById('question-text').innerText = currentQuestion.text;
+            
+            const diffBadge = document.getElementById('difficulty-badge');
+            if (currentQuestion.category === 'facil') {
+                diffBadge.innerText = 'Fácil (+3 QI)';
+                diffBadge.className = 'bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase';
+            } else if (currentQuestion.category === 'medio') {
+                diffBadge.innerText = 'Médio (+3 QI)';
+                diffBadge.className = 'bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full uppercase';
+            } else {
+                diffBadge.innerText = 'Difícil (+6 QI Dobro)';
+                diffBadge.className = 'bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase font-extrabold';
+            }
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            currentQuestion.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full bg-sky-50 hover:bg-sky-100 border-2 border-sky-200 rounded-2xl p-4 font-black text-xl text-sky-900 transition flex items-center justify-between shadow-sm hover:scale-[1.02]';
+                btn.innerHTML = `<span class="bg-sky-200 text-sky-800 text-xs px-2 py-1 rounded-md">${String.fromCharCode(65 + idx)}</span> <span>${opt}</span> <span></span>`;
+                btn.onclick = () => handleAnswer(opt);
+                optionsContainer.appendChild(btn);
+            });
+
+            resetTimer();
+
+            // Resposta Automática no Modo Solo (vs Máquina)
+            if (gameMode === 'solo' && currentPlayerTurn === 2) {
+                optionsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                setTimeout(() => {
+                    const isCorrect = Math.random() > 0.3; 
+                    const botChoice = isCorrect ? currentQuestion.correctAns : currentQuestion.options.find(o => o !== currentQuestion.correctAns);
+                    handleAnswer(botChoice);
+                }, 1800);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timer = 60;
+            document.getElementById('timer-text').innerText = timer;
+            document.getElementById('timer-bar').style.width = '100%';
+
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById('timer-text').innerText = timer;
+                document.getElementById('timer-bar').style.width = `${(timer / 60) * 100}%`;
+
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(null); // Tempo esgotado = Erro
+                }
+            }, 1000);
+        }
+
+        function handleAnswer(selectedOpt) {
+            clearInterval(timerInterval);
+            const activePlayer = currentPlayerTurn === 1 ? p1 : p2;
+            const isCorrect = selectedOpt === currentQuestion.correctAns;
+
+            if (isCorrect) {
+                playSound('correct');
+                const qiGain = currentQuestion.category === 'dificil' ? 6 : 3;
+                activePlayer.qi = Math.min(500, activePlayer.qi + qiGain);
+                activePlayer.phase++;
+                switchTurn();
+            } else {
+                playSound('wrong');
+                activePlayer.lives--;
+                
+                // Se zerar as vidas, o jogo acaba imediatamente
+                if (p1.lives <= 0 || p2.lives <= 0) {
+                    endGame();
+                    return;
+                }
+                
+                // Passagem de vez imediata ao errar a questão
+                switchTurn();
+            }
+        }
+
+        function switchTurn() {
+            currentPlayerTurn = currentPlayerTurn === 1 ? 2 : 1;
+            nextTurn();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            playSound('win');
+
+            document.getElementById('screen-arena').classList.add('hidden');
+            document.getElementById('screen-game-over').classList.remove('hidden');
+
+            let winner = null;
+            let loser = null;
+
+            if (p1.lives > p2.lives) {
+                winner = p1;
+                loser = p2;
+            } else if (p2.lives > p1.lives) {
+                winner = p2;
+                loser = p1;
+            } else {
+                winner = p1.qi >= p2.qi ? p1 : p2;
+                loser = winner === p1 ? p2 : p1;
+            }
+
+            document.getElementById('winner-avatar').innerText = winner.avatar;
+            document.getElementById('winner-title').innerText = `${winner.name} Venceu!`;
+            document.getElementById('winner-subtitle').innerText = `Placar Final - QI: ${winner.qi} pts`;
+            
+            const randomWinTaunt = WIN_TAUNTS[Math.floor(Math.random() * WIN_TAUNTS.length)];
+            const randomLoseTaunt = LOSE_TAUNTS[Math.floor(Math.random() * LOSE_TAUNTS.length)];
+
+            document.getElementById('taunt-message').innerText = `${winner.name}: "${randomWinTaunt}" | ${loser.name}: "${randomLoseTaunt}"`;
+        }
+    </script>
+</body>
+</html>
