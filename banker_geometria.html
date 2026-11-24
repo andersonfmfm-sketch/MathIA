@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuga para o Banker — Geometria em Ação</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka (Estilo Canva/Educativo Lúdico) & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js para efeitos sonoros sintetizados sem arquivos externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        :root {
+            --font-display: 'Fredoka', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 55%, #020617 100%);
+            color: #f8fafc;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: var(--font-display);
+        }
+
+        /* Estilo de cartões inspirados em templates modernos do Canva */
+        .canva-card {
+            background: rgba(30, 41, 59, 0.78);
+            backdrop-filter: blur(14px);
+            border: 2px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .canva-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(129, 140, 248, 0.55);
+        }
+
+        /* Botões com estilo 3D tátil */
+        .btn-3d {
+            transition: all 0.14s ease;
+            box-shadow: 0 5px 0 rgba(15, 23, 42, 0.65);
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.65);
+        }
+
+        /* Animações de pista e pulso */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.45); }
+            50% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.9); }
+        }
+        .power-ready {
+            animation: pulseGlow 1.3s infinite ease-in-out;
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        @keyframes shakeHoriz {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shakeHoriz 0.4s ease-in-out;
+        }
+
+        /* Malha geométrica sutil de fundo */
+        .geo-grid-bg {
+            background-image: 
+                linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 9999px; }
+    </style>
+</head>
+<body class="min-h-screen lg:h-screen lg:overflow-hidden geo-grid-bg flex flex-col">
+
+    <!-- BARRA SUPERIOR / HEADER -->
+    <header class="w-full px-4 py-1.5 sm:px-6 border-b border-indigo-500/20 bg-slate-950/75 backdrop-blur-md flex-shrink-0 z-40">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="app.showScreen('home')">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center shadow-lg border-2 border-amber-200/40">
+                    <!-- Ícone SVG geométrico -->
+                    <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polygon points="12 2 22 20 2 20" />
+                        <circle cx="12" cy="14" r="3" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-cyan-300 leading-none">
+                        Fuga para o Banker
+                    </h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Geometria em Ação • 6º ao 9º Ano</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="app.toggleSound()" id="soundBtn" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600/50 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition" title="Alternar Som">
+                    <span id="soundIcon">🔊</span>
+                    <span class="hidden sm:inline" id="soundText">Som Ativo</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 min-h-0 w-full max-w-7xl mx-auto px-3 py-2 sm:px-6 flex flex-col justify-center overflow-y-auto lg:overflow-hidden">
+
+        <!-- ==================== TELA 1: SELEÇÃO DE PERSONAGEM, SKINS E NÍVEL ==================== -->
+        <section id="screen-home" class="h-full flex flex-col justify-between gap-2.5">
+            <!-- Banner Introdutório + Caixas de Seleção de Nível -->
+            <div class="canva-card rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-indigo-950/90 via-slate-900/90 to-purple-950/90 border-indigo-400/30 flex flex-col lg:flex-row items-center justify-between gap-4">
+                <div class="space-y-1 max-w-xl">
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        Missão Geométrica de Alta Velocidade
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white leading-tight">
+                        Corra contra a Sombra do Caos até o <span class="text-emerald-400">Banker Seguro!</span>
+                    </h2>
+                    <p class="text-slate-300 text-xs leading-relaxed">
+                        Escolha o nível, seu gênio da Matemática e sua <strong>Skin</strong>. Responda rápido para ativar o <strong>Turbo</strong> e carregar sua <strong>Barra de Poder</strong>!
+                    </p>
+                </div>
+
+                <!-- Caixas de Seleção de Nível (Checkboxes Estilizados) -->
+                <div class="w-full lg:w-auto flex-1 max-w-2xl bg-slate-950/70 p-3 rounded-xl border border-slate-700/70 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+                            1. Selecione o Nível / Etapa (BNCC)
+                        </span>
+                        <span id="levelBadgeInfo" class="text-[11px] text-amber-300 font-semibold">
+                            ⏱️ 22s • 100m • Ângulos & Retas
+                        </span>
+                    </div>
+                    <div id="levelCheckboxes" class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de Seleção de Matemáticos -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-md bg-indigo-600 inline-flex items-center justify-center text-xs">2</span>
+                        Escolha seu Personagem & Skin
+                    </h3>
+                    <span class="text-[11px] text-slate-400 hidden sm:inline">Clique para ver história e poder ativo</span>
+                </div>
+
+                <div id="charactersGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- Painel Detalhado do Personagem Selecionado + Seletor de Skin + Botão Jogar -->
+            <div class="canva-card rounded-2xl p-3.5 sm:p-4 border-2 border-amber-400/40 bg-slate-900/90 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <!-- Avatar Preview -->
+                <div class="lg:col-span-2 flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 relative overflow-hidden">
+                    <div id="selectedCharAura" class="absolute inset-0 opacity-25 blur-xl bg-amber-500"></div>
+                    <div id="selectedCharAvatar" class="w-16 h-16 sm:w-20 sm:h-20 relative z-10 animate-float">
+                        <!-- SVG Dinâmico do Personagem com Skin -->
+                    </div>
+                    <span id="selectedSkinBadge" class="mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 relative z-10 text-center">
+                        Skin: Clássico
+                    </span>
+                </div>
+
+                <!-- História & Poder -->
+                <div class="lg:col-span-7 space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 id="selectedCharName" class="text-lg sm:text-xl font-bold text-amber-300">Euclides de Alexandria</h3>
+                        <span id="selectedCharEra" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">~300 a.C. • Pai da Geometria</span>
+                    </div>
+                    <p id="selectedCharBio" class="text-xs text-slate-300 leading-snug">
+                        Autor da obra "Os Elementos", organizou toda a geometria plana em definições, postulados e teoremas lógicos usados até hoje nas escolas.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
+                        <div class="p-2 rounded-xl bg-indigo-950/70 border border-indigo-500/30 flex items-start gap-2">
+                            <div class="text-lg" id="selectedPowerIcon">🛡️</div>
+                            <div>
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Poder (100% Barra)</div>
+                                <div id="selectedPowerName" class="font-bold text-white text-xs">Escudo dos Elementos</div>
+                                <div id="selectedPowerDesc" class="text-[11px] text-slate-300 line-clamp-2">Cria uma barreira geométrica que congela o perseguidor!</div>
+                            </div>
+                        </div>
+
+                        <!-- Seletor de Skins -->
+                        <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Alternar Visual (Skin):</span>
+                            <div id="skinButtons" class="flex flex-wrap gap-1.5">
+                                <!-- Botões de skin gerados via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão Iniciar Fuga -->
+                <div class="lg:col-span-3 flex flex-col gap-1.5">
+                    <button onclick="app.startGame()" class="btn-3d w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-display font-bold text-lg tracking-wide flex items-center justify-center gap-2 cursor-pointer">
+                        <span>🚀 INICIAR FUGA</span>
+                    </button>
+                    <p class="text-center text-[11px] text-slate-400">
+                        Responda rápido para ativar <strong>Turbo!</strong>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TELA 2: JOGO EM AÇÃO (PERSEGUIÇÃO + DESAFIOS) ==================== -->
+        <section id="screen-game" class="hidden h-full min-h-0 flex flex-col justify-between gap-2">
+            <!-- HUD Superior da Partida -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-shrink-0">
+                <div class="canva-card rounded-xl p-1.5 sm:p-2 flex items-center gap-2">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-sm sm:text-base">🗺️</div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Fase</div>
+                        <div id="hudLevel" class="font-display font-bold text-xs sm:text-sm text-white leading-tight">Nível 1</div>
+                    </div>
+                </div>
+
+                <div class="canva-card rounded-xl p-1.5 sm:p-2 flex items-center gap-2">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-sm sm:text-base">⭐</div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Pontos</div>
+                        <div id="hudScore" class="font-display font-bold text-xs sm:text-sm text-amber-300 leading-tight">0 pts</div>
+                    </div>
+                </div>
+
+                <div class="canva-card rounded-xl p-1.5 sm:p-2 flex items-center gap-2">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-sm sm:text-base">🔥</div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Combo</div>
+                        <div id="hudStreak" class="font-display font-bold text-xs sm:text-sm text-rose-400 leading-tight">0x</div>
+                    </div>
+                </div>
+
+                <div class="canva-card rounded-xl p-1.5 sm:p-2 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-sm sm:text-base">🏁</div>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold text-slate-400">Banker</div>
+                            <div id="hudDistance" class="font-display font-bold text-xs sm:text-sm text-emerald-400 leading-tight">100m</div>
+                        </div>
+                    </div>
+                    <button onclick="app.quitToMenu()" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-[11px] text-slate-300 border border-slate-700" title="Sair da Fase">
+                        Sair
+                    </button>
+                </div>
+            </div>
+
+            <!-- PISTA VISUAL DE PERSEGUIÇÃO + BARRA DE PODER COMPACTA -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-stretch flex-shrink-0">
+                <!-- Pista de Perseguição -->
+                <div class="lg:col-span-8 canva-card rounded-2xl p-2 border border-indigo-500/40 bg-slate-950/90 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-[11px] font-bold mb-1 px-1">
+                        <span class="text-rose-400 flex items-center gap-1.5">
+                            <span class="inline-block w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                            Sombra (<span id="chaseGapText">25m atrás</span>)
+                        </span>
+                        <span id="statusBanner" class="text-cyan-300 hidden sm:inline">Avance respondendo rápido!</span>
+                        <span class="text-emerald-400">🏰 BANKER</span>
+                    </div>
+                    <div class="w-full h-16 sm:h-20 rounded-xl overflow-hidden border border-slate-800 relative">
+                        <canvas id="chaseCanvas" class="w-full h-full block"></canvas>
+                    </div>
+                </div>
+
+                <!-- Barra de Poder Ativo -->
+                <div class="lg:col-span-4 canva-card rounded-2xl p-2.5 flex flex-col justify-between gap-1.5 border border-cyan-500/30">
+                    <div class="flex items-center gap-2">
+                        <div id="gameCharMiniAvatar" class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-700 p-0.5 flex-shrink-0"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between text-[11px] font-bold mb-1">
+                                <span id="gamePowerTitle" class="text-cyan-300 truncate">Escudo dos Elementos</span>
+                                <span id="gamePowerPct" class="text-amber-300">0%</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-700 p-0.5">
+                                <div id="gamePowerBar" class="h-full rounded-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-amber-400 transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="activatePowerBtn" onclick="app.activatePower()" disabled class="w-full py-1.5 px-3 rounded-xl font-display font-bold text-xs tracking-wide transition flex items-center justify-center gap-1.5 bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed">
+                        <span id="btnPowerIcon">⚡</span>
+                        <span id="btnPowerLabel">Carregue até 100%</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ÁREA DA QUESTÃO DE GEOMETRIA + FIGURA SVG + CRONÔMETRO -->
+            <div id="questionCard" class="flex-1 min-h-0 canva-card rounded-2xl p-3 sm:p-4 border-2 border-indigo-400/30 flex flex-col justify-between gap-2 overflow-y-auto">
+                <!-- Topo: Categoria + Cronômetro -->
+                <div class="flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span id="qTopicBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/25 text-indigo-200 border border-indigo-400/30">
+                            Ângulos
+                        </span>
+                        <span id="shieldActiveBadge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/25 text-cyan-200 border border-cyan-400/40">
+                            🛡️ Escudo Ativo
+                        </span>
+                    </div>
+
+                    <!-- Cronômetro Visual -->
+                    <div class="flex items-center gap-2.5 flex-1 sm:flex-initial sm:w-60 justify-end">
+                        <div class="w-full sm:w-40 h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-700">
+                            <div id="timerBar" class="h-full bg-emerald-400 transition-all duration-100" style="width: 100%"></div>
+                        </div>
+                        <span id="timerText" class="font-display font-bold text-sm sm:text-base text-emerald-300 w-11 text-right">20.0s</span>
+                    </div>
+                </div>
+
+                <!-- Corpo da Questão: Ilustração Geométrica + Enunciado e Opções -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center my-auto">
+                    <!-- Diagrama Geométrico SVG Dinâmico -->
+                    <div class="lg:col-span-4 bg-slate-950/85 rounded-xl p-2 border border-slate-800 flex flex-col items-center justify-center">
+                        <div id="questionDiagram" class="w-full max-w-[190px] h-[110px] sm:h-[125px] flex items-center justify-center">
+                            <!-- SVG da figura geométrica -->
+                        </div>
+                        <span id="diagramCaption" class="text-[10px] text-slate-400 mt-0.5 text-center leading-tight">Observe as medidas indicadas</span>
+                    </div>
+
+                    <!-- Pergunta e 4 Alternativas -->
+                    <div class="lg:col-span-8 space-y-2.5">
+                        <h3 id="questionText" class="text-sm sm:text-base font-bold text-white leading-snug">
+                            Carregando desafio geométrico...
+                        </h3>
+
+                        <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <!-- Alternativas A, B, C, D -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Feedback Pedagógico Imediato (Aparece ao responder/errar) -->
+                <div id="feedbackBox" class="hidden rounded-xl p-2.5 border-2 transition-all flex-shrink-0">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div class="space-y-0.5">
+                            <div id="feedbackTitle" class="font-display font-bold text-xs sm:text-sm"></div>
+                            <p id="feedbackExplanation" class="text-xs leading-snug"></p>
+                        </div>
+                        <button id="nextQuestionBtn" onclick="app.nextQuestion()" class="btn-3d px-4 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display font-bold text-xs whitespace-nowrap cursor-pointer">
+                            Continuar ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TELA 3: RESULTADO DA FASE (VITÓRIA OU CAPTURA) ==================== -->
+        <section id="screen-result" class="hidden max-w-2xl mx-auto w-full">
+            <div class="canva-card rounded-3xl p-5 sm:p-7 text-center space-y-4 border-2 border-amber-400/40">
+                <div id="resultEmoji" class="text-5xl animate-bounce">🏆</div>
+                <div class="space-y-1">
+                    <h2 id="resultTitle" class="text-2xl sm:text-3xl font-bold text-white">Você chegou ao Banker!</h2>
+                    <p id="resultSubtitle" class="text-slate-300 text-xs sm:text-sm">
+                        Sua agilidade geométrica deixou a Sombra do Caos para trás!
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 bg-slate-950/70 p-3 rounded-2xl border border-slate-800">
+                    <div>
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">Pontuação</div>
+                        <div id="resScore" class="font-display font-bold text-lg sm:text-2xl text-amber-300">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">Acertos</div>
+                        <div id="resAccuracy" class="font-display font-bold text-lg sm:text-2xl text-emerald-400">0/0</div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] text-slate-400 font-bold uppercase">Tempo Médio</div>
+                        <div id="resAvgTime" class="font-display font-bold text-lg sm:text-2xl text-cyan-300">0.0s</div>
+                    </div>
+                </div>
+
+                <div id="resStudyTip" class="p-3 rounded-2xl bg-indigo-950/70 border border-indigo-500/30 text-left text-xs text-indigo-100">
+                    💡 <strong>Resumo Pedagógico:</strong> Excelente domínio das propriedades geométricas!
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-1">
+                    <button onclick="app.showScreen('home')" class="btn-3d px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-display font-bold text-sm cursor-pointer">
+                        🔄 Trocar Herói / Nível
+                    </button>
+                    <button id="resPrimaryActionBtn" onclick="app.nextLevelOrRetry()" class="btn-3d px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-bold text-sm cursor-pointer">
+                        🚀 Próximo Nível
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- TOAST DE NOTIFICAÇÃO (SUBSTITUI ALERT) -->
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-2xl bg-slate-900 border-2 border-amber-400 text-white text-sm font-bold shadow-2xl transition-all">
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * MOTOR DE ÁUDIO SINTETIZADO (TONE.JS) - SEM DEPENDÊNCIA DE ARQUIVOS EXTERNOS
+         * ============================================================================
+         */
+        class SoundFX {
+            constructor() {
+                this.enabled = true;
+                this.initialized = false;
+                this.synth = null;
+            }
+
+            init() {
+                if (this.initialized) return;
+                try {
+                    this.synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                    this.synth.volume.value = -8;
+                    this.initialized = true;
+                } catch (e) {
+                    console.warn("Áudio aguardando interação:", e);
+                }
+            }
+
+            playCorrect(isFast) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.synth) return;
+                const now = Tone.now();
+                if (isFast) {
+                    // Fanfarra turbo
+                    this.synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "16n", now);
+                    this.synth.triggerAttackRelease(["G5", "B5", "D6"], "8n", now + 0.12);
+                } else {
+                    this.synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+                }
+            }
+
+            playWrong() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.synth) return;
+                const now = Tone.now();
+                this.synth.triggerAttackRelease(["E3", "Bb2"], "8n", now);
+                this.synth.triggerAttackRelease(["D3", "Ab2"], "4n", now + 0.15);
+            }
+
+            playPower() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.synth) return;
+                const now = Tone.now();
+                this.synth.triggerAttackRelease(["A4", "C#5", "E5", "A5"], "16n", now);
+                this.synth.triggerAttackRelease(["B4", "D#5", "F#5", "B5"], "8n", now + 0.12);
+            }
+
+            playWin() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.synth) return;
+                const now = Tone.now();
+                ["C5", "E5", "G5", "C6"].forEach((note, idx) => {
+                    this.synth.triggerAttackRelease(note, "8n", now + idx * 0.1);
+                });
+            }
+        }
+
+        /**
+         * ============================================================================
+         * BANCO DE PERSONAGENS, SKINS E PODERES ATIVOS
+         * ============================================================================
+         */
+        const CHARACTERS = [
+            {
+                id: 'euclides',
+                name: 'Euclides',
+                fullName: 'Euclides de Alexandria',
+                era: '~300 a.C. • Pai da Geometria',
+                bio: 'Escreveu "Os Elementos", obra que organizou a geometria plana com axiomas, retas, ângulos e polígonos usados até hoje.',
+                powerId: 'shield',
+                powerIcon: '🛡️',
+                powerName: 'Escudo dos Elementos',
+                powerDesc: 'Bloqueia o avanço da perseguição por 1 rodada e anula completamente o impacto caso você erre a questão!',
+                accent: '#38bdf8',
+                skins: [
+                    { id: 'classic', name: 'Clássico Grego', robe: '#f8fafc', trim: '#f59e0b', hair: '#cbd5e1', item: 'scroll' },
+                    { id: 'explorer', name: 'Explorador', robe: '#b45309', trim: '#fde047', hair: '#94a3b8', item: 'compass' },
+                    { id: 'neon', name: 'Cyber Euclides', robe: '#1e1b4b', trim: '#22d3ee', hair: '#38bdf8', item: 'holo' }
+                ]
+            },
+            {
+                id: 'pitagoras',
+                name: 'Pitágoras',
+                fullName: 'Pitágoras de Samos',
+                era: '~570 a.C. • Triângulos & Harmonia',
+                bio: 'Liderou a escola pitagórica e ficou célebre pela relação métrica nos triângulos retângulos (a² = b² + c²).',
+                powerId: 'dash',
+                powerIcon: '⚡',
+                powerName: 'Impulso da Hipotenusa',
+                powerDesc: 'Corta caminho pela diagonal! Avança imediatamente +24m em direção ao Banker e ganha +250 pontos.',
+                accent: '#facc15',
+                skins: [
+                    { id: 'classic', name: 'Mestre de Samos', robe: '#fef08a', trim: '#dc2626', hair: '#e2e8f0', item: 'triangle' },
+                    { id: 'adventurer', name: 'Aventureiro', robe: '#065f46', trim: '#34d399', hair: '#cbd5e1', item: 'compass' },
+                    { id: 'neon', name: 'Neon Synth', robe: '#311042', trim: '#f472b6', hair: '#facc15', item: 'holo' }
+                ]
+            },
+            {
+                id: 'arquimedes',
+                name: 'Arquimedes',
+                fullName: 'Arquimedes de Siracusa',
+                era: '~287 a.C. • Círculos, Esferas & Alavancas',
+                bio: 'Calculou aproximações incríveis para o número π (Pi), estudou cilindros e esferas e criou máquinas com alavancas.',
+                powerId: 'pushback',
+                powerIcon: '🧲',
+                powerName: 'Alavanca de Siracusa',
+                powerDesc: 'Empurra a Sombra do Caos 22m para trás e adiciona +10 segundos extras ao cronômetro atual!',
+                accent: '#fb923c',
+                skins: [
+                    { id: 'classic', name: 'Inventor Clássico', robe: '#ffedd5', trim: '#ea580c', hair: '#94a3b8', item: 'sphere' },
+                    { id: 'teacher', name: 'Professor Geek', robe: '#1e3a8a', trim: '#60a5fa', hair: '#e2e8f0', item: 'ruler' },
+                    { id: 'neon', name: 'Engenheiro Futurista', robe: '#0f172a', trim: '#fb923c', hair: '#38bdf8', item: 'holo' }
+                ]
+            },
+            {
+                id: 'hypatia',
+                name: 'Hypatia',
+                fullName: 'Hypatia de Alexandria',
+                era: '~370 d.C. • Astrônoma & Geômetra',
+                bio: 'Primeira mulher matemática documentada da história, ensinou geometria, astronomia e aperfeiçoou o astrolábio.',
+                powerId: 'vision',
+                powerIcon: '🔮',
+                powerName: 'Visão Astral',
+                powerDesc: 'Elimina automaticamente 2 alternativas erradas da questão atual e dá um salto de +12m!',
+                accent: '#e879f9',
+                skins: [
+                    { id: 'classic', name: 'Sábia de Alexandria', robe: '#fae8ff', trim: '#c026d3', hair: '#451a03', item: 'astrolabe' },
+                    { id: 'explorer', name: 'Astrônoma Estelar', robe: '#1e1b4b', trim: '#a855f7', hair: '#78350f', item: 'astrolabe' },
+                    { id: 'neon', name: 'Oráculo Neon', robe: '#090d16', trim: '#e879f9', hair: '#f472b6', item: 'holo' }
+                ]
+            },
+            {
+                id: 'noether',
+                name: 'Emmy Noether',
+                fullName: 'Emmy Noether',
+                era: '1882–1935 • Rainha da Simetria',
+                bio: 'Revolucionou a álgebra moderna e conectou simetrias geométricas às leis fundamentais da natureza.',
+                powerId: 'symmetry',
+                powerIcon: '🦋',
+                powerName: 'Reflexo Simétrico',
+                powerDesc: 'Espelha sua velocidade! Dobra o avanço da sua próxima resposta certa e recua o perseguidor em 12m.',
+                accent: '#34d399',
+                skins: [
+                    { id: 'classic', name: 'Professora 1920', robe: '#ecfdf5', trim: '#059669', hair: '#57534e', item: 'cube' },
+                    { id: 'adventurer', name: 'Viajante Quântica', robe: '#134e4a', trim: '#2dd4bf', hair: '#78716c', item: 'cube' },
+                    { id: 'neon', name: 'Matriz Esmeralda', robe: '#022c22', trim: '#34d399', hair: '#a7f3d0', item: 'holo' }
+                ]
+            }
+        ];
+
+        /**
+         * ============================================================================
+         * CONFIGURAÇÃO DOS 5 NÍVEIS PROGRESSIVOS (6º AO 9º ANO)
+         * ============================================================================
+         */
+        const LEVELS = {
+            1: {
+                num: 1,
+                shortName: 'Nível 1',
+                grade: '6º Ano • Ângulos',
+                title: 'Nível 1 • Cidadela dos Ângulos (6º Ano)',
+                timeLimit: 22,
+                distance: 100,
+                chaseSpeed: 6.5,
+                badge: '⏱️ 22s • 100m • Ângulos & Retas'
+            },
+            2: {
+                num: 2,
+                shortName: 'Nível 2',
+                grade: '6º/7º • Polígonos',
+                title: 'Nível 2 • Vale dos Polígonos (6º/7º Ano)',
+                timeLimit: 20,
+                distance: 120,
+                chaseSpeed: 7.5,
+                badge: '⏱️ 20s • 120m • Triângulos & Quadriláteros'
+            },
+            3: {
+                num: 3,
+                shortName: 'Nível 3',
+                grade: '7º/8º • Áreas',
+                title: 'Nível 3 • Arena de Perímetro e Área (7º/8º Ano)',
+                timeLimit: 19,
+                distance: 140,
+                chaseSpeed: 8.5,
+                badge: '⏱️ 19s • 140m • Áreas & Perímetros'
+            },
+            4: {
+                num: 4,
+                shortName: 'Nível 4',
+                grade: '8º/9º • Círculo/π',
+                title: 'Nível 4 • Templo de Pi e Simetrias (8º/9º Ano)',
+                timeLimit: 18,
+                distance: 155,
+                chaseSpeed: 9.2,
+                badge: '⏱️ 18s • 155m • Círculo, π & Simetria'
+            },
+            5: {
+                num: 5,
+                shortName: 'Nível 5',
+                grade: '9º Ano • Espacial',
+                title: 'Nível 5 • Fortaleza Espacial (9º Ano)',
+                timeLimit: 17,
+                distance: 175,
+                chaseSpeed: 10.0,
+                badge: '⏱️ 17s • 175m • Sólidos & Pitágoras'
+            }
+        };
+
+        /**
+         * ============================================================================
+         * BANCO DE QUESTÕES DE GEOMETRIA COM DIAGRAMAS SVG E EXPLICAÇÕES PEDAGÓGICAS
+         * ============================================================================
+         */
+        const QUESTIONS_BANK = [
+            // ---------------- NÍVEL 1: ÂNGULOS E NOÇÕES BÁSICAS ----------------
+            {
+                level: 1,
+                topic: 'Classificação de Ângulos',
+                text: 'Um ângulo mede exatamente 90°, formando um "canto reto" como na esquina de um caderno. Como ele é classificado?',
+                options: ['Ângulo Reto', 'Ângulo Agudo', 'Ângulo Obtuso', 'Ângulo Raso'],
+                correct: 0,
+                explanation: 'Ângulo reto mede exatamente 90°. Agudo é menor que 90°, obtuso está entre 90° e 180°, e raso mede 180°.',
+                caption: 'Representação de ângulo com vértice e semirretas perpendiculares',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <line x1="50" y1="130" x2="180" y2="130" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="50" y1="130" x2="50" y2="25" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+                        <rect x="50" y="108" width="22" height="22" fill="rgba(250,204,21,0.25)" stroke="#facc15" stroke-width="2.5"/>
+                        <circle cx="50" cy="130" r="5" fill="#facc15"/>
+                        <text x="82" y="114" fill="#fde047" font-size="16" font-weight="bold">90°</text>
+                      </svg>`
+            },
+            {
+                level: 1,
+                topic: 'Ângulos Complementares',
+                text: 'Dois ângulos são complementares quando a soma deles é 90°. Se um deles mede 35°, quanto mede o outro (x)?',
+                options: ['55°', '145°', '65°', '45°'],
+                correct: 0,
+                explanation: 'Ângulos complementares somam 90° (não 180°!). Logo: 90° - 35° = 55°.',
+                caption: 'Ângulos adjacentes formando um ângulo reto',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <line x1="45" y1="135" x2="185" y2="135" stroke="#94a3b8" stroke-width="3"/>
+                        <line x1="45" y1="135" x2="45" y2="25" stroke="#94a3b8" stroke-width="3"/>
+                        <line x1="45" y1="135" x2="155" y2="60" stroke="#facc15" stroke-width="3.5"/>
+                        <path d="M 85 135 A 40 40 0 0 0 78 112" fill="none" stroke="#34d399" stroke-width="3"/>
+                        <text x="95" y="125" fill="#34d399" font-size="14" font-weight="bold">35°</text>
+                        <text x="62" y="75" fill="#facc15" font-size="16" font-weight="bold">x = ?</text>
+                      </svg>`
+            },
+            {
+                level: 1,
+                topic: 'Ângulos Suplementares',
+                text: 'Na linha reta abaixo (ângulo raso de 180°), o ângulo obtuso mede 130°. Qual é o valor do ângulo suplementar y?',
+                options: ['50°', '40°', '60°', '230°'],
+                correct: 0,
+                explanation: 'Meia volta (ângulo raso) mede 180°. Subtraindo 130°, temos: 180° - 130° = 50°.',
+                caption: 'Ângulos suplementares sobre uma reta',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <line x1="20" y1="120" x2="200" y2="120" stroke="#38bdf8" stroke-width="4"/>
+                        <line x1="115" y1="120" x2="165" y2="45" stroke="#facc15" stroke-width="4"/>
+                        <path d="M 80 120 A 35 35 0 0 1 135 90" fill="none" stroke="#f472b6" stroke-width="3"/>
+                        <text x="58" y="88" fill="#f472b6" font-size="14" font-weight="bold">130°</text>
+                        <text x="148" y="108" fill="#fde047" font-size="15" font-weight="bold">y</text>
+                      </svg>`
+            },
+            {
+                level: 1,
+                topic: 'Ângulos Opostos pelo Vértice',
+                text: 'Duas retas se cruzam formando um "X". Se o ângulo da esquerda mede 62°, quanto mede o ângulo oposto pelo vértice (a)?',
+                options: ['62°', '118°', '28°', '90°'],
+                correct: 0,
+                explanation: 'Ângulos opostos pelo vértice (O.P.V.) têm sempre a mesma medida! Portanto, a = 62°.',
+                caption: 'Retas concorrentes formando ângulos opostos pelo vértice',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <line x1="35" y1="35" x2="185" y2="125" stroke="#38bdf8" stroke-width="3.5"/>
+                        <line x1="35" y1="125" x2="185" y2="35" stroke="#38bdf8" stroke-width="3.5"/>
+                        <circle cx="110" cy="80" r="4" fill="#facc15"/>
+                        <text x="45" y="85" fill="#34d399" font-size="15" font-weight="bold">62°</text>
+                        <text x="155" y="85" fill="#fde047" font-size="16" font-weight="bold">a = ?</text>
+                      </svg>`
+            },
+            {
+                level: 1,
+                topic: 'Giros e Ângulos',
+                text: 'Um skatista deu um giro completo de 360°, e depois mais um quarto de volta. Quantos graus equivale 1/4 de volta?',
+                options: ['90°', '180°', '45°', '120°'],
+                correct: 0,
+                explanation: 'Uma volta completa tem 360°. Dividindo 360° por 4, obtemos 90° (um ângulo reto).',
+                caption: 'Divisão da circunferência em 4 quadrantes',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <circle cx="110" cy="80" r="52" fill="none" stroke="#64748b" stroke-width="2.5" stroke-dasharray="5,5"/>
+                        <path d="M 110 80 L 162 80 A 52 52 0 0 0 110 28 Z" fill="rgba(56,189,248,0.3)" stroke="#38bdf8" stroke-width="3"/>
+                        <text x="122" y="65" fill="#fde047" font-size="14" font-weight="bold">1/4</text>
+                      </svg>`
+            },
+
+            // ---------------- NÍVEL 2: TRIÂNGULOS E QUADRILÁTEROS ----------------
+            {
+                level: 2,
+                topic: 'Soma dos Ângulos do Triângulo',
+                text: 'Em qualquer triângulo, a soma dos ângulos internos é 180°. Se dois ângulos medem 70° e 50°, quanto mede o terceiro?',
+                options: ['60°', '120°', '80°', '40°'],
+                correct: 0,
+                explanation: '70° + 50° = 120°. Como a soma total no triângulo é sempre 180°, falta: 180° - 120° = 60°.',
+                caption: 'Triângulo com dois ângulos conhecidos',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="110,22 35,135 185,135" fill="rgba(99,102,241,0.25)" stroke="#818cf8" stroke-width="3.5"/>
+                        <text x="98" y="55" fill="#fde047" font-size="14" font-weight="bold">?</text>
+                        <text x="52" y="126" fill="#34d399" font-size="13" font-weight="bold">70°</text>
+                        <text x="142" y="126" fill="#34d399" font-size="13" font-weight="bold">50°</text>
+                      </svg>`
+            },
+            {
+                level: 2,
+                topic: 'Classificação de Triângulos',
+                text: 'Observe as marcas nos lados do triângulo: os três lados têm exatamente a mesma medida (6 cm). Como ele se chama?',
+                options: ['Equilátero', 'Isósceles', 'Escaleno', 'Retângulo'],
+                correct: 0,
+                explanation: 'Equilátero = 3 lados iguais (e 3 ângulos de 60°). Isósceles = 2 lados iguais. Escaleno = 3 lados diferentes.',
+                caption: 'Triângulo com os três lados congruentes',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="110,22 45,135 175,135" fill="rgba(16,185,129,0.2)" stroke="#34d399" stroke-width="3.5"/>
+                        <text x="52" y="78" fill="#fde047" font-size="13" font-weight="bold">6 cm</text>
+                        <text x="145" y="78" fill="#fde047" font-size="13" font-weight="bold">6 cm</text>
+                        <text x="95" y="152" fill="#fde047" font-size="13" font-weight="bold">6 cm</text>
+                      </svg>`
+            },
+            {
+                level: 2,
+                topic: 'Quadriláteros Notáveis',
+                text: 'Qual quadrilátero possui 4 lados de mesma medida, mas seus ângulos não precisam ser de 90° (parece uma pipa/balão)?',
+                options: ['Losango', 'Retângulo', 'Trapézio', 'Pentágono'],
+                correct: 0,
+                explanation: 'O losango tem os 4 lados iguais. O retângulo tem 4 ângulos retos, mas lados opostos iguais. O quadrado reúne ambos!',
+                caption: 'Quadrilátero com quatro lados congruentes e diagonais perpendiculares',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="110,18 175,80 110,142 45,80" fill="rgba(244,114,182,0.22)" stroke="#f472b6" stroke-width="3.5"/>
+                        <line x1="110" y1="18" x2="110" y2="142" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                        <line x1="45" y1="80" x2="175" y2="80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                        <text x="145" y="48" fill="#fde047" font-size="12" font-weight="bold">5 cm</text>
+                        <text x="48" y="48" fill="#fde047" font-size="12" font-weight="bold">5 cm</text>
+                      </svg>`
+            },
+            {
+                level: 2,
+                topic: 'Diagonais de Polígonos',
+                text: 'Quantas diagonais podem ser traçadas ligando vértices não vizinhos dentro de um quadrilátero (como um quadrado)?',
+                options: ['2 diagonais', '4 diagonais', '1 diagonal', '6 diagonais'],
+                correct: 0,
+                explanation: 'Um quadrilátero tem 4 vértices; cada vértice se liga a apenas 1 vértice oposto, formando exatamente 2 diagonais.',
+                caption: 'Segmentos internos ligando vértices opostos',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <rect x="60" y="30" width="100" height="100" fill="rgba(56,189,248,0.18)" stroke="#38bdf8" stroke-width="3.5"/>
+                        <line x1="60" y1="30" x2="160" y2="130" stroke="#facc15" stroke-width="2.5" stroke-dasharray="5,4"/>
+                        <line x1="160" y1="30" x2="60" y2="130" stroke="#facc15" stroke-width="2.5" stroke-dasharray="5,4"/>
+                      </svg>`
+            },
+            {
+                level: 2,
+                topic: 'Soma dos Ângulos do Quadrilátero',
+                text: 'Dividindo um quadrilátero ao meio por uma diagonal, formamos 2 triângulos. Qual é a soma dos 4 ângulos internos dele?',
+                options: ['360°', '180°', '270°', '540°'],
+                correct: 0,
+                explanation: 'Como cada triângulo soma 180°, dois triângulos juntos somam 2 × 180° = 360°.',
+                caption: 'Quadrilátero decomposto em dois triângulos',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="50,35 165,25 180,130 40,125" fill="rgba(168,85,247,0.22)" stroke="#c084fc" stroke-width="3.5"/>
+                        <line x1="50" y1="35" x2="180" y2="130" stroke="#fde047" stroke-width="2.5"/>
+                        <text x="115" y="65" fill="#fde047" font-size="13" font-weight="bold">180°</text>
+                        <text x="72" y="108" fill="#fde047" font-size="13" font-weight="bold">180°</text>
+                      </svg>`
+            },
+
+            // ---------------- NÍVEL 3: PERÍMETRO E ÁREA DE FIGURAS PLANAS ----------------
+            {
+                level: 3,
+                topic: 'Perímetro vs. Área',
+                text: 'Um campo retangular mede 10 m de comprimento por 6 m de largura. Quantos metros de cerca são necessários para contorná-lo (PERÍMETRO)?',
+                options: ['32 m', '60 m', '16 m', '36 m'],
+                correct: 0,
+                explanation: 'Atenção para não confundir! 60 m² seria a ÁREA. O PERÍMETRO é a soma dos 4 lados: 10 + 6 + 10 + 6 = 32 m.',
+                caption: 'Retângulo de dimensões 10 m × 6 m',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <rect x="40" y="42" width="140" height="76" fill="rgba(16,185,129,0.2)" stroke="#34d399" stroke-width="4"/>
+                        <text x="92" y="33" fill="#fde047" font-size="14" font-weight="bold">10 m</text>
+                        <text x="186" y="85" fill="#38bdf8" font-size="14" font-weight="bold">6 m</text>
+                      </svg>`
+            },
+            {
+                level: 3,
+                topic: 'Área do Triângulo',
+                text: 'Calcule a ÁREA de uma placa triangular com base de 8 cm e altura de 5 cm. (Lembre-se: Área = base × altura ÷ 2)',
+                options: ['20 cm²', '40 cm²', '13 cm²', '26 cm²'],
+                correct: 0,
+                explanation: 'Não esqueça de dividir por 2! Base × altura = 8 × 5 = 40. Dividindo por 2, temos 20 cm².',
+                caption: 'Triângulo com base = 8 cm e altura = 5 cm',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="40,130 180,130 125,35" fill="rgba(250,204,21,0.22)" stroke="#facc15" stroke-width="3.5"/>
+                        <line x1="125" y1="35" x2="125" y2="130" stroke="#f43f5e" stroke-width="2.5" stroke-dasharray="4,4"/>
+                        <text x="132" y="90" fill="#fb7185" font-size="13" font-weight="bold">h = 5 cm</text>
+                        <text x="85" y="148" fill="#38bdf8" font-size="13" font-weight="bold">b = 8 cm</text>
+                      </svg>`
+            },
+            {
+                level: 3,
+                topic: 'Área do Quadrado',
+                text: 'O perímetro de um quadrado é 28 cm. Qual é a ÁREA desse quadrado?',
+                options: ['49 cm²', '28 cm²', '14 cm²', '196 cm²'],
+                correct: 0,
+                explanation: 'Primeiro achamos o lado: 28 ÷ 4 = 7 cm. Depois calculamos a área: lado × lado = 7 × 7 = 49 cm².',
+                caption: 'Quadrado com contorno total igual a 28 cm',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <rect x="65" y="32" width="90" height="90" fill="rgba(56,189,248,0.22)" stroke="#38bdf8" stroke-width="4"/>
+                        <text x="72" y="82" fill="#fde047" font-size="13" font-weight="bold">Perím. = 28</text>
+                        <text x="98" y="140" fill="#34d399" font-size="13" font-weight="bold">L = ?</text>
+                      </svg>`
+            },
+            {
+                level: 3,
+                topic: 'Área do Losango',
+                text: 'Uma pipa em formato de losango tem diagonal maior D = 10 cm e diagonal menor d = 6 cm. Qual é sua área? (A = D × d ÷ 2)',
+                options: ['30 cm²', '60 cm²', '16 cm²', '32 cm²'],
+                correct: 0,
+                explanation: 'A área do losango é metade do produto das diagonais: (10 × 6) ÷ 2 = 60 ÷ 2 = 30 cm².',
+                caption: 'Losango com diagonais de 10 cm e 6 cm',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="110,18 165,80 110,142 55,80" fill="rgba(232,121,249,0.22)" stroke="#e879f9" stroke-width="3.5"/>
+                        <line x1="110" y1="18" x2="110" y2="142" stroke="#fde047" stroke-width="2.5"/>
+                        <line x1="55" y1="80" x2="165" y2="80" stroke="#38bdf8" stroke-width="2.5"/>
+                        <text x="115" y="45" fill="#fde047" font-size="12" font-weight="bold">D=10</text>
+                        <text x="65" y="74" fill="#38bdf8" font-size="12" font-weight="bold">d=6</text>
+                      </svg>`
+            },
+            {
+                level: 3,
+                topic: 'Área do Trapézio',
+                text: 'Um trapézio tem base maior B = 8 m, base menor b = 4 m e altura h = 3 m. Qual é sua área? [A = (B + b) × h ÷ 2]',
+                options: ['18 m²', '36 m²', '24 m²', '15 m²'],
+                correct: 0,
+                explanation: 'Somamos as bases: 8 + 4 = 12. Multiplicamos pela altura: 12 × 3 = 36. Dividimos por 2: 18 m².',
+                caption: 'Trapézio com bases paralelas de 8 m e 4 m',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="70,40 150,40 185,125 35,125" fill="rgba(251,146,60,0.24)" stroke="#fb923c" stroke-width="3.5"/>
+                        <line x1="70" y1="40" x2="70" y2="125" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4"/>
+                        <text x="96" y="32" fill="#fde047" font-size="13" font-weight="bold">b = 4 m</text>
+                        <text x="94" y="143" fill="#fde047" font-size="13" font-weight="bold">B = 8 m</text>
+                        <text x="75" y="88" fill="#38bdf8" font-size="12" font-weight="bold">h=3m</text>
+                      </svg>`
+            },
+
+            // ---------------- NÍVEL 4: CÍRCULO, PI E SIMETRIA ----------------
+            {
+                level: 4,
+                topic: 'Raio vs. Diâmetro',
+                text: 'Uma roda gigante tem DIÂMETRO de 24 metros. Qual é a medida do RAIO dessa roda?',
+                options: ['12 m', '48 m', '24 m', '6 m'],
+                correct: 0,
+                explanation: 'Cuidado para não dobrar! O diâmetro atravessa o círculo inteiro (2 × raio). Logo, o raio é a metade: 24 ÷ 2 = 12 m.',
+                caption: 'Circunferência com diâmetro total de 24 m',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <circle cx="110" cy="80" r="56" fill="rgba(56,189,248,0.18)" stroke="#38bdf8" stroke-width="3.5"/>
+                        <line x1="54" y1="80" x2="166" y2="80" stroke="#facc15" stroke-width="3"/>
+                        <circle cx="110" cy="80" r="4" fill="#f43f5e"/>
+                        <text x="76" y="72" fill="#fde047" font-size="13" font-weight="bold">D = 24 m</text>
+                      </svg>`
+            },
+            {
+                level: 4,
+                topic: 'Comprimento da Circunferência',
+                text: 'Usando π ≈ 3, qual é o comprimento aproximado de uma pista circular de RAIO r = 5 m? (Use C = 2 · π · r)',
+                options: ['30 m', '15 m', '75 m', '60 m'],
+                correct: 0,
+                explanation: 'Substituindo na fórmula C = 2 · π · r: C = 2 × 3 × 5 = 30 metros.',
+                caption: 'Círculo de raio r = 5 m (considere π ≈ 3)',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <circle cx="110" cy="80" r="54" fill="none" stroke="#34d399" stroke-width="4"/>
+                        <line x1="110" y1="80" x2="164" y2="80" stroke="#fde047" stroke-width="3"/>
+                        <circle cx="110" cy="80" r="4" fill="#fde047"/>
+                        <text x="118" y="72" fill="#fde047" font-size="13" font-weight="bold">r = 5 m</text>
+                      </svg>`
+            },
+            {
+                level: 4,
+                topic: 'Área do Círculo',
+                text: 'Considerando π ≈ 3, qual é a ÁREA aproximada de uma pizza circular de RAIO r = 4 cm? (Use A = π · r²)',
+                options: ['48 cm²', '24 cm²', '12 cm²', '144 cm²'],
+                correct: 0,
+                explanation: 'Primeiro elevamos o raio ao quadrado: r² = 4² = 16. Depois multiplicamos por π (3): 3 × 16 = 48 cm².',
+                caption: 'Setor e área total de círculo com r = 4 cm',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <circle cx="110" cy="80" r="54" fill="rgba(251,146,60,0.28)" stroke="#fb923c" stroke-width="3.5"/>
+                        <line x1="110" y1="80" x2="152" y2="45" stroke="#fde047" stroke-width="3"/>
+                        <text x="112" y="98" fill="#fde047" font-size="13" font-weight="bold">r = 4 cm</text>
+                      </svg>`
+            },
+            {
+                level: 4,
+                topic: 'Plano Cartesiano e Reflexão',
+                text: 'Um ponto P está nas coordenadas (3, 4). Se fizermos uma REFLEXÃO (espelho) em relação ao eixo vertical Y, para onde ele vai?',
+                options: ['(-3, 4)', '(3, -4)', '(-3, -4)', '(4, 3)'],
+                correct: 0,
+                explanation: 'Ao espelhar horizontalmente cruzando o eixo Y, a altura Y continua 4, mas o X muda de sinal: de +3 para -3.',
+                caption: 'Simetria axial no plano cartesiano',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <line x1="110" y1="15" x2="110" y2="145" stroke="#94a3b8" stroke-width="2.5"/>
+                        <line x1="30" y1="115" x2="190" y2="115" stroke="#94a3b8" stroke-width="2.5"/>
+                        <circle cx="155" cy="55" r="6" fill="#38bdf8"/>
+                        <text x="145" y="43" fill="#38bdf8" font-size="12" font-weight="bold">P(3,4)</text>
+                        <circle cx="65" cy="55" r="6" fill="#facc15" stroke="#fff" stroke-width="1.5"/>
+                        <text x="45" y="43" fill="#fde047" font-size="12" font-weight="bold">P' = ?</text>
+                        <line x1="65" y1="55" x2="155" y2="55" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="4,4"/>
+                      </svg>`
+            },
+            {
+                level: 4,
+                topic: 'Transformações Geométricas',
+                text: 'Quando deslizamos uma figura geométrica em linha reta sem girá-la e sem mudar seu tamanho, qual transformação ocorreu?',
+                options: ['Translação', 'Rotação', 'Reflexão', 'Ampliação'],
+                correct: 0,
+                explanation: 'Translação é o deslocamento paralelo de uma figura (como arrastar um ícone na tela) mantendo forma, tamanho e orientação.',
+                caption: 'Deslocamento paralelo de uma figura plana',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="35,110 75,110 55,60" fill="rgba(148,163,184,0.3)" stroke="#94a3b8" stroke-width="2.5"/>
+                        <line x1="78" y1="85" x2="128" y2="85" stroke="#facc15" stroke-width="3"/>
+                        <polygon points="128,80 138,85 128,90" fill="#facc15"/>
+                        <polygon points="145,110 185,110 165,60" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="3"/>
+                      </svg>`
+            },
+
+            // ---------------- NÍVEL 5: GEOMETRIA ESPACIAL E PITÁGORAS ----------------
+            {
+                level: 5,
+                topic: 'Elementos de Poliedros (Cubo)',
+                text: 'Observe o cubo (hexaedro regular). Quantas ARESTAS (linhas de encontro das faces) um cubo possui ao todo?',
+                options: ['12 arestas', '8 arestas', '6 arestas', '10 arestas'],
+                correct: 0,
+                explanation: 'Um cubo possui 6 faces quadradas, 8 vértices (pontas) e 12 arestas (4 em cima, 4 embaixo e 4 verticais).',
+                caption: 'Cubo em perspectiva mostrando faces, vértices e arestas',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <rect x="65" y="55" width="65" height="65" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="3"/>
+                        <rect x="95" y="30" width="65" height="65" fill="none" stroke="#818cf8" stroke-width="2.5"/>
+                        <line x1="65" y1="55" x2="95" y2="30" stroke="#facc15" stroke-width="2.5"/>
+                        <line x1="130" y1="55" x2="160" y2="30" stroke="#facc15" stroke-width="2.5"/>
+                        <line x1="65" y1="120" x2="95" y2="95" stroke="#facc15" stroke-width="2.5"/>
+                        <line x1="130" y1="120" x2="160" y2="95" stroke="#facc15" stroke-width="2.5"/>
+                      </svg>`
+            },
+            {
+                level: 5,
+                topic: 'Planificação de Sólidos',
+                text: 'A planificação abaixo mostra um retângulo grande e dois círculos congruentes nas extremidades. Qual sólido geométrico ela monta?',
+                options: ['Cilindro', 'Cone', 'Esfera', 'Prisma Triangular'],
+                correct: 0,
+                explanation: 'O cilindro possui duas bases circulares iguais e uma superfície lateral curva que, quando aberta, vira um retângulo.',
+                caption: 'Planificação composta por 2 círculos e 1 retângulo',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <rect x="55" y="52" width="110" height="56" fill="rgba(232,121,249,0.25)" stroke="#e879f9" stroke-width="3"/>
+                        <circle cx="110" cy="30" r="20" fill="rgba(56,189,248,0.25)" stroke="#38bdf8" stroke-width="3"/>
+                        <circle cx="110" cy="130" r="20" fill="rgba(56,189,248,0.25)" stroke="#38bdf8" stroke-width="3"/>
+                      </svg>`
+            },
+            {
+                level: 5,
+                topic: 'Teorema de Pitágoras',
+                text: 'Em um triângulo retângulo, os catetos medem 3 cm e 4 cm. Qual é a medida da hipotenusa (x)? (Use a² = b² + c²)',
+                options: ['5 cm', '7 cm', '25 cm', '6 cm'],
+                correct: 0,
+                explanation: 'x² = 3² + 4² → x² = 9 + 16 = 25 → x = √25 = 5 cm! Esse é o famoso triângulo pitagórico 3-4-5.',
+                caption: 'Triângulo retângulo com catetos 3 cm e 4 cm',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="55,130 165,130 55,40" fill="rgba(250,204,21,0.22)" stroke="#facc15" stroke-width="3.5"/>
+                        <rect x="55" y="114" width="16" height="16" fill="none" stroke="#38bdf8" stroke-width="2"/>
+                        <text x="22" y="90" fill="#34d399" font-size="14" font-weight="bold">3 cm</text>
+                        <text x="95" y="148" fill="#34d399" font-size="14" font-weight="bold">4 cm</text>
+                        <text x="118" y="76" fill="#fde047" font-size="16" font-weight="bold">x = ?</text>
+                      </svg>`
+            },
+            {
+                level: 5,
+                topic: 'Volume do Paralelepípedo',
+                text: 'Uma caixa retangular tem 5 cm de comprimento, 3 cm de largura e 4 cm de altura. Qual é o seu VOLUME? (V = c · l · h)',
+                options: ['60 cm³', '12 cm³', '47 cm³', '30 cm³'],
+                correct: 0,
+                explanation: 'O volume de um bloco retangular é o produto das três dimensões: 5 × 3 × 4 = 60 cm³.',
+                caption: 'Bloco retangular de dimensões 5 cm × 3 cm × 4 cm',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="45,65 135,65 135,125 45,125" fill="rgba(16,185,129,0.25)" stroke="#34d399" stroke-width="3"/>
+                        <polygon points="45,65 75,40 165,40 135,65" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="3"/>
+                        <polygon points="135,65 165,40 165,100 135,125" fill="rgba(5,150,105,0.4)" stroke="#34d399" stroke-width="3"/>
+                        <text x="75" y="142" fill="#fde047" font-size="13" font-weight="bold">5 cm</text>
+                        <text x="155" y="122" fill="#38bdf8" font-size="12" font-weight="bold">3 cm</text>
+                        <text x="16" y="98" fill="#fb7185" font-size="12" font-weight="bold">4 cm</text>
+                      </svg>`
+            },
+            {
+                level: 5,
+                topic: 'Pirâmide de Base Quadrada',
+                text: 'Quantas FACES ao todo possui uma pirâmide que tem um quadrado como base?',
+                options: ['5 faces', '4 faces', '6 faces', '8 faces'],
+                correct: 0,
+                explanation: 'Ela possui 1 face quadrada na base + 4 faces triangulares nas laterais = 5 faces no total.',
+                caption: 'Pirâmide quadrangular reta',
+                svg: `<svg viewBox="0 0 220 160" class="w-full h-full">
+                        <polygon points="110,22 45,120 135,135 175,105" fill="rgba(251,146,60,0.24)" stroke="#fb923c" stroke-width="3"/>
+                        <line x1="110" y1="22" x2="135" y2="135" stroke="#fde047" stroke-width="2.5"/>
+                        <line x1="45" y1="120" x2="85" y2="95" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                        <line x1="85" y1="95" x2="175" y2="105" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                        <line x1="110" y1="22" x2="85" y2="95" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4"/>
+                      </svg>`
+            }
+        ];
+
+        /**
+         * ============================================================================
+         * PROMPTS PRONTOS PARA O CANVA (MÍDIA MÁGICA / LAYOUTS)
+         * ============================================================================
+         */
+        const CANVA_PROMPTS = [
+            {
+                title: '1. Cenário de Fundo da Corrida (16:9)',
+                prompt: 'Game background illustration, futuristic ancient Greek geometric temple track at twilight, glowing golden sacred geometry grid lines on marble path, safe glowing emerald fortress banker at the far right horizon, vibrant indigo and cyan sky, clean vector 2D game art style, no text.'
+            },
+            {
+                title: '2. Card de Personagem — Euclides / Pitágoras / Hypatia',
+                prompt: 'Stylized educational game character portrait, friendly young mathematician hero holding a glowing golden compass and floating geometric holograms, vibrant cartoon vector illustration style like modern mobile games, rich indigo and gold rim lighting, isolated on dark navy background.'
+            },
+            {
+                title: '3. Ameaça / Perseguidor ("Sombra do Caos")',
+                prompt: 'Abstract purple and crimson geometric storm wave chasing along a glowing grid track, fractured polygons and floating shards, dramatic dynamic action game asset, 2D flat vector illustration with neon glow, transparent or dark background.'
+            },
+            {
+                title: '4. Ícone do Destino ("Banker Seguro")',
+                prompt: 'Isometric glowing emerald and gold geometric sanctuary vault dome, protective energy shield aura, clean 2D game UI icon, crisp edges, vibrant colors, educational math adventure theme.'
+            }
+        ];
+
+        /**
+         * ============================================================================
+         * GERADOR DE AVATARES SVG CUSTOMIZADOS COM SUPORTE A SKINS
+         * ============================================================================
+         */
+        function renderCharacterSVG(charObj, skinIndex = 0) {
+            const skin = charObj.skins[skinIndex] || charObj.skins[0];
+            let accessorySVG = '';
+
+            if (skin.item === 'compass' || skin.item === 'triangle') {
+                accessorySVG = `<polygon points="74,62 88,86 60,86" fill="none" stroke="${skin.trim}" stroke-width="3"/>`;
+            } else if (skin.item === 'astrolabe' || skin.item === 'sphere') {
+                accessorySVG = `<circle cx="76" cy="74" r="11" fill="none" stroke="${skin.trim}" stroke-width="2.5"/><circle cx="76" cy="74" r="3" fill="${skin.trim}"/>`;
+            } else if (skin.item === 'holo') {
+                accessorySVG = `<rect x="64" y="62" width="22" height="22" rx="4" fill="rgba(56,189,248,0.25)" stroke="#22d3ee" stroke-width="2.5"/>`;
+            } else {
+                accessorySVG = `<rect x="66" y="64" width="18" height="22" rx="3" fill="${skin.trim}"/>`;
+            }
+
+            const isFemale = charObj.id === 'hypatia' || charObj.id === 'noether';
+            const hairSVG = isFemale
+                ? `<path d="M 30 42 Q 50 14 70 42 L 74 66 Q 50 58 26 66 Z" fill="${skin.hair}"/>`
+                : `<path d="M 32 38 Q 50 18 68 38" fill="none" stroke="${skin.hair}" stroke-width="8" stroke-linecap="round"/>`;
+
+            return `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <!-- Aura de fundo -->
+                    <circle cx="50" cy="50" r="45" fill="rgba(15,23,42,0.75)" stroke="${skin.trim}" stroke-width="3"/>
+                    ${hairSVG}
+                    <!-- Túnica / Traje -->
+                    <path d="M 24 90 Q 28 60 50 60 Q 72 60 76 90 Z" fill="${skin.robe}" stroke="${skin.trim}" stroke-width="2.5"/>
+                    <!-- Faixa / Detalhe -->
+                    <path d="M 38 62 L 50 86 L 62 62" fill="none" stroke="${skin.trim}" stroke-width="3"/>
+                    <!-- Rosto -->
+                    <circle cx="50" cy="42" r="17" fill="#fed7aa"/>
+                    <!-- Olhos expressivos -->
+                    <circle cx="44" cy="40" r="2.3" fill="#0f172a"/>
+                    <circle cx="56" cy="40" r="2.3" fill="#0f172a"/>
+                    <!-- Sorriso confiante -->
+                    <path d="M 44 48 Q 50 53 56 48" fill="none" stroke="#9a3412" stroke-width="2.2" stroke-linecap="round"/>
+                    <!-- Item geométrico -->
+                    ${accessorySVG}
+                </svg>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * CONTROLADOR PRINCIPAL DO JOGO ("FUGA PARA O BANKER")
+         * ============================================================================
+         */
+        class GeometryEscapeGame {
+            constructor() {
+                this.sfx = new SoundFX();
+                this.selectedCharId = 'euclides';
+                this.selectedSkinIdx = 0;
+                this.selectedLevel = 1;
+
+                // Estado da partida
+                this.state = {
+                    running: false,
+                    pausedForFeedback: false,
+                    score: 0,
+                    streak: 0,
+                    correctCount: 0,
+                    totalAnswered: 0,
+                    responseTimes: [],
+                    playerPos: 25,     // Posição em metros
+                    chaserPos: 0,      // Posição do perseguidor em metros
+                    targetDist: 100,   // Posição do Banker
+                    powerCharge: 0,    // 0 a 100
+                    shieldActive: false,
+                    doubleNextMove: false,
+                    timeRemaining: 20,
+                    maxTime: 20,
+                    currentQuestion: null,
+                    questionQueue: [],
+                    animFrameId: null,
+                    lastTimestamp: 0,
+                    particles: []
+                };
+
+                this.initUI();
+                this.setupCanvas();
+            }
+
+            initUI() {
+                this.renderLevelCheckboxes();
+                this.renderCharactersGrid();
+                this.updateSelectedCharacterPanel();
+            }
+
+            renderLevelCheckboxes() {
+                const container = document.getElementById('levelCheckboxes');
+                if (!container) return;
+                container.innerHTML = Object.values(LEVELS).map(lvl => {
+                    const checked = lvl.num === this.selectedLevel;
+                    return `
+                        <label onclick="app.selectLevel(${lvl.num})"
+                               class="flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition select-none ${checked ? 'bg-indigo-900/90 border-amber-400 text-white shadow-md' : 'bg-slate-900/80 border-slate-700/80 text-slate-300 hover:border-slate-500'}">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="app.selectLevel(${lvl.num})"
+                                   class="w-4 h-4 accent-amber-400 rounded cursor-pointer flex-shrink-0">
+                            <div class="leading-tight overflow-hidden">
+                                <div class="font-bold text-xs ${checked ? 'text-amber-300' : 'text-white'}">${lvl.shortName}</div>
+                                <div class="text-[10px] text-slate-400 truncate">${lvl.grade}</div>
+                            </div>
+                        </label>
+                    `;
+                }).join('');
+            }
+
+            toggleSound() {
+                this.sfx.enabled = !this.sfx.enabled;
+                document.getElementById('soundIcon').textContent = this.sfx.enabled ? '🔊' : '🔇';
+                document.getElementById('soundText').textContent = this.sfx.enabled ? 'Som Ativo' : 'Mudo';
+                if (this.sfx.enabled) this.sfx.init();
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('toastBox');
+                toast.textContent = msg;
+                toast.classList.remove('hidden');
+                clearTimeout(this.toastTimer);
+                this.toastTimer = setTimeout(() => toast.classList.add('hidden'), 2800);
+            }
+
+            showScreen(name) {
+                ['home', 'game', 'result'].forEach(s => {
+                    document.getElementById(`screen-${s}`).classList.add('hidden');
+                });
+                document.getElementById(`screen-${name}`).classList.remove('hidden');
+                if (name === 'game') {
+                    this.resizeCanvas();
+                }
+            }
+
+            selectLevel(lvl) {
+                this.selectedLevel = parseInt(lvl, 10);
+                document.getElementById('levelBadgeInfo').innerHTML = LEVELS[this.selectedLevel].badge;
+                this.renderLevelCheckboxes();
+            }
+
+            getSelectedChar() {
+                return CHARACTERS.find(c => c.id === this.selectedCharId) || CHARACTERS[0];
+            }
+
+            renderCharactersGrid() {
+                const grid = document.getElementById('charactersGrid');
+                grid.innerHTML = CHARACTERS.map(char => {
+                    const isSelected = char.id === this.selectedCharId;
+                    return `
+                        <div onclick="app.selectCharacter('${char.id}')" 
+                             class="canva-card rounded-xl p-2.5 cursor-pointer flex flex-col items-center text-center relative ${isSelected ? 'border-amber-400 bg-indigo-950/90 ring-2 ring-amber-400/50' : ''}">
+                            ${isSelected ? '<span class="absolute top-1.5 right-1.5 text-[10px] bg-amber-400 text-slate-950 font-bold px-1.5 py-0.2 rounded-full">Ativo</span>' : ''}
+                            <div class="w-11 h-11 mb-1">
+                                ${renderCharacterSVG(char, isSelected ? this.selectedSkinIdx : 0)}
+                            </div>
+                            <h4 class="font-bold text-white text-xs sm:text-sm leading-tight">${char.name}</h4>
+                            <span class="text-[10px] text-cyan-300 font-semibold mt-0.5 truncate w-full">${char.powerIcon} ${char.powerName}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            selectCharacter(charId) {
+                this.selectedCharId = charId;
+                this.selectedSkinIdx = 0;
+                this.renderCharactersGrid();
+                this.updateSelectedCharacterPanel();
+            }
+
+            selectSkin(idx) {
+                this.selectedSkinIdx = idx;
+                this.renderCharactersGrid();
+                this.updateSelectedCharacterPanel();
+            }
+
+            updateSelectedCharacterPanel() {
+                const char = this.getSelectedChar();
+                const skin = char.skins[this.selectedSkinIdx];
+
+                document.getElementById('selectedCharAvatar').innerHTML = renderCharacterSVG(char, this.selectedSkinIdx);
+                document.getElementById('selectedCharAura').style.backgroundColor = char.accent;
+                document.getElementById('selectedSkinBadge').textContent = `Skin: ${skin.name}`;
+                document.getElementById('selectedCharName').textContent = char.fullName;
+                document.getElementById('selectedCharEra').textContent = char.era;
+                document.getElementById('selectedCharBio').textContent = char.bio;
+                document.getElementById('selectedPowerIcon').textContent = char.powerIcon;
+                document.getElementById('selectedPowerName').textContent = char.powerName;
+                document.getElementById('selectedPowerDesc').textContent = char.powerDesc;
+
+                const skinBtns = document.getElementById('skinButtons');
+                skinBtns.innerHTML = char.skins.map((s, idx) => `
+                    <button onclick="app.selectSkin(${idx})" 
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${idx === this.selectedSkinIdx ? 'bg-amber-400 text-slate-950 border-amber-300' : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500'}">
+                        🎨 ${s.name}
+                    </button>
+                `).join('');
+            }
+
+            /**
+             * ========================================================================
+             * INÍCIO E LOOP DA PARTIDA
+             * ========================================================================
+             */
+            startGame() {
+                this.sfx.init();
+                const lvlConfig = LEVELS[this.selectedLevel];
+                const char = this.getSelectedChar();
+
+                // Embaralha questões do nível atual (e complementa com anteriores se necessário)
+                const levelQs = QUESTIONS_BANK.filter(q => q.level === this.selectedLevel);
+                const extraQs = QUESTIONS_BANK.filter(q => q.level !== this.selectedLevel);
+                this.state.questionQueue = [...this.shuffle(levelQs), ...this.shuffle(extraQs)];
+
+                this.state.running = true;
+                this.state.pausedForFeedback = false;
+                this.state.score = 0;
+                this.state.streak = 0;
+                this.state.correctCount = 0;
+                this.state.totalAnswered = 0;
+                this.state.responseTimes = [];
+                this.state.targetDist = lvlConfig.distance;
+                this.state.playerPos = 24;
+                this.state.chaserPos = 0;
+                this.state.powerCharge = 35; // Começa com 35% de energia
+                this.state.shieldActive = false;
+                this.state.doubleNextMove = false;
+                this.state.maxTime = lvlConfig.timeLimit;
+                this.state.particles = [];
+
+                // Atualiza HUD do personagem
+                document.getElementById('hudLevel').textContent = `Nível ${lvlConfig.num}`;
+                document.getElementById('gameCharMiniAvatar').innerHTML = renderCharacterSVG(char, this.selectedSkinIdx);
+                document.getElementById('gamePowerTitle').textContent = `${char.powerIcon} ${char.powerName}`;
+
+                this.updateHUD();
+                this.updatePowerUI();
+                this.showScreen('game');
+                this.loadNextQuestion();
+
+                if (this.state.animFrameId) cancelAnimationFrame(this.state.animFrameId);
+                this.state.lastTimestamp = performance.now();
+                this.gameLoop(this.state.lastTimestamp);
+            }
+
+            quitToMenu() {
+                this.state.running = false;
+                if (this.state.animFrameId) cancelAnimationFrame(this.state.animFrameId);
+                this.showScreen('home');
+            }
+
+            shuffle(arr) {
+                const copy = [...arr];
+                for (let i = copy.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [copy[i], copy[j]] = [copy[j], copy[i]];
+                }
+                return copy;
+            }
+
+            gameLoop(timestamp) {
+                if (!this.state.running) return;
+                const dt = Math.min((timestamp - this.state.lastTimestamp) / 1000, 0.1);
+                this.state.lastTimestamp = timestamp;
+
+                if (!this.state.pausedForFeedback) {
+                    // Atualiza cronômetro da questão
+                    this.state.timeRemaining -= dt;
+                    if (this.state.timeRemaining <= 0) {
+                        this.state.timeRemaining = 0;
+                        this.handleTimeout();
+                    }
+                    this.updateTimerUI();
+
+                    // Avanço contínuo sutil da Sombra do Caos durante a reflexão do jogador
+                    const lvlConfig = LEVELS[this.selectedLevel];
+                    const chaseRate = (lvlConfig.chaseSpeed * 0.22); // Pressão constante equilibrada
+                    this.state.chaserPos += chaseRate * dt;
+
+                    // Verifica se o perseguidor alcançou o jogador
+                    if (this.state.chaserPos >= this.state.playerPos - 2) {
+                        if (this.state.shieldActive) {
+                            this.state.shieldActive = false;
+                            this.state.chaserPos = Math.max(0, this.state.playerPos - 18);
+                            this.updateShieldBadge();
+                            this.showToast('🛡️ Seu Escudo dos Elementos repeliu a Sombra!');
+                        } else {
+                            this.finishGame(false);
+                            return;
+                        }
+                    }
+
+                    this.updateHUD();
+                }
+
+                this.drawChaseCanvas();
+                this.state.animFrameId = requestAnimationFrame((ts) => this.gameLoop(ts));
+            }
+
+            /**
+             * ========================================================================
+             * GESTÃO DE QUESTÕES E RESPOSTAS
+             * ========================================================================
+             */
+            loadNextQuestion() {
+                if (this.state.questionQueue.length === 0) {
+                    this.state.questionQueue = this.shuffle(QUESTIONS_BANK);
+                }
+                const q = this.state.questionQueue.shift();
+                this.state.currentQuestion = q;
+                this.state.timeRemaining = this.state.maxTime;
+                this.state.pausedForFeedback = false;
+
+                document.getElementById('feedbackBox').classList.add('hidden');
+                document.getElementById('qTopicBadge').textContent = `📐 ${q.topic}`;
+                document.getElementById('questionText').textContent = q.text;
+                document.getElementById('questionDiagram').innerHTML = q.svg;
+                document.getElementById('diagramCaption').textContent = q.caption;
+
+                // Embaralha alternativas mantendo controle da correta
+                const indexedOpts = q.options.map((label, idx) => ({
+                    label,
+                    isCorrect: idx === q.correct
+                }));
+                const shuffledOpts = this.shuffle(indexedOpts);
+                this.currentShuffledOptions = shuffledOpts;
+
+                const letters = ['A', 'B', 'C', 'D'];
+                const grid = document.getElementById('optionsGrid');
+                grid.innerHTML = shuffledOpts.map((opt, idx) => `
+                    <button id="optBtn-${idx}" onclick="app.submitAnswer(${idx})"
+                            class="btn-3d p-2.5 sm:p-3 rounded-xl bg-slate-800/95 hover:bg-indigo-900/80 border-2 border-slate-600/70 hover:border-amber-400 text-left flex items-center gap-2.5 transition cursor-pointer">
+                        <span class="w-7 h-7 rounded-lg bg-indigo-600/40 border border-indigo-400/40 flex items-center justify-center font-display font-bold text-sm text-amber-300 flex-shrink-0">
+                            ${letters[idx]}
+                        </span>
+                        <span class="font-semibold text-xs sm:text-sm text-white leading-tight">${opt.label}</span>
+                    </button>
+                `).join('');
+
+                this.updateTimerUI();
+            }
+
+            submitAnswer(selectedIndex) {
+                if (this.state.pausedForFeedback || !this.state.running) return;
+                this.state.pausedForFeedback = true;
+
+                const chosen = this.currentShuffledOptions[selectedIndex];
+                const elapsed = this.state.maxTime - this.state.timeRemaining;
+                const speedRatio = this.state.timeRemaining / this.state.maxTime; // 1.0 = instantâneo, 0.0 = no limite
+
+                this.state.totalAnswered++;
+                this.state.responseTimes.push(elapsed);
+
+                // Desabilita botões e destaca certo/errado
+                this.currentShuffledOptions.forEach((opt, idx) => {
+                    const btn = document.getElementById(`optBtn-${idx}`);
+                    btn.disabled = true;
+                    if (opt.isCorrect) {
+                        btn.classList.remove('bg-slate-800/95', 'border-slate-600/70');
+                        btn.classList.add('bg-emerald-900/80', 'border-emerald-400');
+                    } else if (idx === selectedIndex && !opt.isCorrect) {
+                        btn.classList.remove('bg-slate-800/95', 'border-slate-600/70');
+                        btn.classList.add('bg-rose-900/80', 'border-rose-500');
+                    }
+                });
+
+                const q = this.state.currentQuestion;
+                const fbBox = document.getElementById('feedbackBox');
+                const fbTitle = document.getElementById('feedbackTitle');
+                const fbExp = document.getElementById('feedbackExplanation');
+
+                if (chosen.isCorrect) {
+                    const isFast = speedRatio >= 0.5;
+                    this.sfx.playCorrect(isFast);
+
+                    this.state.correctCount++;
+                    this.state.streak++;
+
+                    // Cálculo do impulso rumo ao Banker baseado na velocidade
+                    let boost = Math.round(16 + speedRatio * 16); // Entre 16m e 32m por acerto
+                    if (this.state.doubleNextMove) {
+                        boost *= 2;
+                        this.state.doubleNextMove = false;
+                        this.showToast('🦋 Reflexo Simétrico dobrou seu avanço!');
+                    }
+
+                    const pointsEarned = Math.round((150 + speedRatio * 200) * (1 + (this.state.streak - 1) * 0.15));
+                    this.state.score += pointsEarned;
+                    this.state.playerPos = Math.min(this.state.targetDist, this.state.playerPos + boost);
+
+                    // Carrega Barra de Poder (mais rápido se responder na primeira metade do tempo)
+                    const powerGain = isFast ? 45 : 30;
+                    this.state.powerCharge = Math.min(100, this.state.powerCharge + powerGain);
+                    this.spawnParticles('#34d399', 18);
+
+                    fbBox.className = 'rounded-2xl p-4 border-2 bg-emerald-950/75 border-emerald-400/60 text-emerald-100';
+                    fbTitle.textContent = isFast
+                        ? `⚡ TURBO GEOMÉTRICO! +${boost}m de avanço (+${pointsEarned} pts)`
+                        : `✅ Resposta Correta! +${boost}m de avanço (+${pointsEarned} pts)`;
+                    fbExp.textContent = q.explanation;
+
+                    this.updateHUD();
+                    this.updatePowerUI();
+
+                    // Verifica vitória imediata se alcançou o Banker
+                    if (this.state.playerPos >= this.state.targetDist) {
+                        setTimeout(() => this.finishGame(true), 700);
+                        return;
+                    }
+
+                    // Avança automaticamente para a próxima questão sem exigir clique no botão
+                    this.showToast(isFast
+                        ? `⚡ TURBO! +${boost}m (+${pointsEarned} pts)`
+                        : `✅ Correto! +${boost}m (+${pointsEarned} pts)`);
+
+                    setTimeout(() => {
+                        if (this.state.running) {
+                            this.loadNextQuestion();
+                        }
+                    }, 550);
+                    return;
+                } else {
+                    this.sfx.playWrong();
+                    this.state.streak = 0;
+                    document.getElementById('questionCard').classList.add('shake');
+                    setTimeout(() => document.getElementById('questionCard').classList.remove('shake'), 450);
+
+                    if (this.state.shieldActive) {
+                        this.state.shieldActive = false;
+                        this.updateShieldBadge();
+                        fbBox.className = 'rounded-2xl p-4 border-2 bg-cyan-950/80 border-cyan-400/60 text-cyan-100';
+                        fbTitle.textContent = '🛡️ Escudo dos Elementos absorveu o erro!';
+                        fbExp.textContent = `A Sombra não avançou desta vez. Veja o porquê: ${q.explanation}`;
+                    } else {
+                        const chaseAdvance = 14;
+                        this.state.chaserPos += chaseAdvance;
+                        this.spawnParticles('#f43f5e', 16);
+
+                        fbBox.className = 'rounded-2xl p-4 border-2 bg-rose-950/80 border-rose-500/60 text-rose-100';
+                        fbTitle.textContent = `⚠️ Ops! A Sombra avançou +${chaseAdvance}m!`;
+                        fbExp.textContent = `Aprenda na hora: ${q.explanation}`;
+                    }
+
+                    this.updateHUD();
+
+                    if (this.state.chaserPos >= this.state.playerPos - 2) {
+                        setTimeout(() => this.finishGame(false), 1400);
+                        return;
+                    }
+                }
+
+                fbBox.classList.remove('hidden');
+            }
+
+            handleTimeout() {
+                if (this.state.pausedForFeedback) return;
+                this.state.pausedForFeedback = true;
+                this.sfx.playWrong();
+                this.state.streak = 0;
+                this.state.totalAnswered++;
+                this.state.responseTimes.push(this.state.maxTime);
+
+                const q = this.state.currentQuestion;
+                const fbBox = document.getElementById('feedbackBox');
+                const fbTitle = document.getElementById('feedbackTitle');
+                const fbExp = document.getElementById('feedbackExplanation');
+
+                this.currentShuffledOptions.forEach((opt, idx) => {
+                    const btn = document.getElementById(`optBtn-${idx}`);
+                    btn.disabled = true;
+                    if (opt.isCorrect) {
+                        btn.classList.add('bg-emerald-900/80', 'border-emerald-400');
+                    }
+                });
+
+                if (this.state.shieldActive) {
+                    this.state.shieldActive = false;
+                    this.updateShieldBadge();
+                    fbBox.className = 'rounded-2xl p-4 border-2 bg-cyan-950/80 border-cyan-400/60 text-cyan-100';
+                    fbTitle.textContent = '⏱️ Tempo esgotado, mas seu Escudo protegeu você!';
+                    fbExp.textContent = q.explanation;
+                } else {
+                    this.state.chaserPos += 15;
+                    fbBox.className = 'rounded-2xl p-4 border-2 bg-amber-950/80 border-amber-500/60 text-amber-100';
+                    fbTitle.textContent = '⏱️ Tempo esgotado! A Sombra se aproximou +15m!';
+                    fbExp.textContent = `Dica rápida: ${q.explanation}`;
+                }
+
+                this.updateHUD();
+                if (this.state.chaserPos >= this.state.playerPos - 2) {
+                    setTimeout(() => this.finishGame(false), 1400);
+                    return;
+                }
+                fbBox.classList.remove('hidden');
+            }
+
+            nextQuestion() {
+                if (!this.state.running) return;
+                this.loadNextQuestion();
+            }
+
+            /**
+             * ========================================================================
+             * ATIVAÇÃO DOS PODERES ESPECIAIS DOS MATEMÁTICOS (100% BARRA)
+             * ========================================================================
+             */
+            activatePower() {
+                if (this.state.powerCharge < 100 || !this.state.running) return;
+                const char = this.getSelectedChar();
+                this.state.powerCharge = 0;
+                this.sfx.playPower();
+                this.spawnParticles('#facc15', 28);
+
+                switch (char.powerId) {
+                    case 'shield': // Euclides
+                        this.state.shieldActive = true;
+                        this.state.chaserPos = Math.max(0, this.state.chaserPos - 8);
+                        this.updateShieldBadge();
+                        this.showToast('🛡️ Escudo dos Elementos ativado! Próximo erro anulado!');
+                        break;
+
+                    case 'dash': // Pitágoras
+                        this.state.playerPos = Math.min(this.state.targetDist, this.state.playerPos + 24);
+                        this.state.score += 250;
+                        this.showToast('⚡ Impulso da Hipotenusa! +24m rumo ao Banker!');
+                        if (this.state.playerPos >= this.state.targetDist) {
+                            this.updateHUD();
+                            this.updatePowerUI();
+                            setTimeout(() => this.finishGame(true), 600);
+                            return;
+                        }
+                        break;
+
+                    case 'pushback': // Arquimedes
+                        this.state.chaserPos = Math.max(0, this.state.chaserPos - 22);
+                        this.state.timeRemaining = Math.min(this.state.maxTime + 10, this.state.timeRemaining + 10);
+                        this.showToast('🧲 Alavanca de Siracusa! Sombra recuou 22m e +10s no relógio!');
+                        break;
+
+                    case 'vision': // Hypatia
+                        this.state.playerPos = Math.min(this.state.targetDist, this.state.playerPos + 12);
+                        let removed = 0;
+                        this.currentShuffledOptions.forEach((opt, idx) => {
+                            const btn = document.getElementById(`optBtn-${idx}`);
+                            if (!opt.isCorrect && removed < 2 && btn && !btn.disabled) {
+                                btn.disabled = true;
+                                btn.classList.add('opacity-25', 'line-through');
+                                removed++;
+                            }
+                        });
+                        this.showToast('🔮 Visão Astral! 2 alternativas erradas eliminadas e +12m!');
+                        break;
+
+                    case 'symmetry': // Emmy Noether
+                        this.state.doubleNextMove = true;
+                        this.state.chaserPos = Math.max(0, this.state.chaserPos - 12);
+                        this.showToast('🦋 Reflexo Simétrico! Próximo acerto valerá o DOBRO de distância!');
+                        break;
+                }
+
+                this.updateHUD();
+                this.updatePowerUI();
+            }
+
+            updateShieldBadge() {
+                const badge = document.getElementById('shieldActiveBadge');
+                if (this.state.shieldActive) badge.classList.remove('hidden');
+                else badge.classList.add('hidden');
+            }
+
+            updateHUD() {
+                const distLeft = Math.max(0, Math.round(this.state.targetDist - this.state.playerPos));
+                const gap = Math.max(0, Math.round(this.state.playerPos - this.state.chaserPos));
+
+                document.getElementById('hudScore').textContent = `${this.state.score} pts`;
+                document.getElementById('hudStreak').textContent = `${this.state.streak}x`;
+                document.getElementById('hudDistance').textContent = `${distLeft}m`;
+                document.getElementById('chaseGapText').textContent = `${gap}m atrás`;
+            }
+
+            updateTimerUI() {
+                const pct = Math.max(0, (this.state.timeRemaining / this.state.maxTime) * 100);
+                const bar = document.getElementById('timerBar');
+                const txt = document.getElementById('timerText');
+
+                bar.style.width = `${pct}%`;
+                txt.textContent = `${this.state.timeRemaining.toFixed(1)}s`;
+
+                if (pct > 50) {
+                    bar.className = 'h-full bg-emerald-400 transition-all duration-100';
+                    txt.className = 'font-display font-bold text-lg text-emerald-300 w-12 text-right';
+                } else if (pct > 25) {
+                    bar.className = 'h-full bg-amber-400 transition-all duration-100';
+                    txt.className = 'font-display font-bold text-lg text-amber-300 w-12 text-right';
+                } else {
+                    bar.className = 'h-full bg-rose-500 transition-all duration-100';
+                    txt.className = 'font-display font-bold text-lg text-rose-400 w-12 text-right';
+                }
+            }
+
+            updatePowerUI() {
+                const pct = Math.round(this.state.powerCharge);
+                document.getElementById('gamePowerPct').textContent = `${pct}%`;
+                document.getElementById('gamePowerBar').style.width = `${pct}%`;
+
+                const btn = document.getElementById('activatePowerBtn');
+                const char = this.getSelectedChar();
+
+                if (pct >= 100) {
+                    btn.disabled = false;
+                    btn.className = 'btn-3d power-ready w-full sm:w-auto px-5 py-3 rounded-xl font-display font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 text-slate-950 border-2 border-white cursor-pointer';
+                    document.getElementById('btnPowerIcon').textContent = char.powerIcon;
+                    document.getElementById('btnPowerLabel').textContent = `ATIVAR: ${char.powerName.toUpperCase()}!`;
+                } else {
+                    btn.disabled = true;
+                    btn.className = 'w-full sm:w-auto px-5 py-3 rounded-xl font-display font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed';
+                    document.getElementById('btnPowerIcon').textContent = '⚡';
+                    document.getElementById('btnPowerLabel').textContent = `Carregando (${pct}%)`;
+                }
+            }
+
+            finishGame(won) {
+                this.state.running = false;
+                if (this.state.animFrameId) cancelAnimationFrame(this.state.animFrameId);
+
+                const avgTime = this.state.responseTimes.length > 0
+                    ? (this.state.responseTimes.reduce((a, b) => a + b, 0) / this.state.responseTimes.length).toFixed(1)
+                    : '0.0';
+
+                document.getElementById('resScore').textContent = `${this.state.score} pts`;
+                document.getElementById('resAccuracy').textContent = `${this.state.correctCount}/${this.state.totalAnswered}`;
+                document.getElementById('resAvgTime').textContent = `${avgTime}s`;
+
+                const primaryBtn = document.getElementById('resPrimaryActionBtn');
+
+                if (won) {
+                    this.sfx.playWin();
+                    document.getElementById('resultEmoji').textContent = '🏰🏆';
+                    document.getElementById('resultTitle').textContent = 'Você alcançou o Banker!';
+                    document.getElementById('resultSubtitle').textContent = `Missão cumprida no ${LEVELS[this.selectedLevel].title}!`;
+                    document.getElementById('resStudyTip').innerHTML = `💡 <strong>Destaque Geométrico:</strong> Você manteve um tempo médio de <strong>${avgTime}s</strong> por questão com ${this.getSelectedChar().fullName}. Continue avançando para dominar novos conceitos!`;
+
+                    if (this.selectedLevel < 5) {
+                        primaryBtn.textContent = `🚀 Avançar para o Nível ${this.selectedLevel + 1}`;
+                        this.nextActionMode = 'next';
+                    } else {
+                        primaryBtn.textContent = '👑 Jogar Nível 5 Novamente';
+                        this.nextActionMode = 'retry';
+                    }
+                } else {
+                    this.sfx.playWrong();
+                    document.getElementById('resultEmoji').textContent = '🌪️🧭';
+                    document.getElementById('resultTitle').textContent = 'A Sombra do Caos alcançou você!';
+                    document.getElementById('resultSubtitle').textContent = 'Quase lá! Revise os feedbacks das questões e tente uma nova fuga.';
+                    document.getElementById('resStudyTip').innerHTML = `💡 <strong>Dica Estratégica:</strong> Fique atento à diferença entre <em>perímetro</em> (contorno) e <em>área</em> (superfície), e ative o poder de <strong>${this.getSelectedChar().name}</strong> assim que atingir 100%!`;
+                    primaryBtn.textContent = '🔄 Tentar Fase Novamente';
+                    this.nextActionMode = 'retry';
+                }
+
+                this.showScreen('result');
+            }
+
+            nextLevelOrRetry() {
+                if (this.nextActionMode === 'next' && this.selectedLevel < 5) {
+                    this.selectedLevel++;
+                    this.selectLevel(this.selectedLevel);
+                }
+                this.startGame();
+            }
+
+            /**
+             * ========================================================================
+             * RENDERIZAÇÃO DA PISTA DE PERSEGUIÇÃO EM CANVAS 2D RESPONSIVO
+             * ========================================================================
+             */
+            setupCanvas() {
+                this.canvas = document.getElementById('chaseCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                window.addEventListener('resize', () => this.resizeCanvas());
+                this.resizeCanvas();
+            }
+
+            resizeCanvas() {
+                if (!this.canvas) return;
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            spawnParticles(color, count) {
+                if (!this.canvas) return;
+                const w = this.canvas.width / (window.devicePixelRatio || 1);
+                const h = this.canvas.height / (window.devicePixelRatio || 1);
+                const ratio = Math.min(1, Math.max(0, this.state.playerPos / this.state.targetDist));
+                const px = 45 + ratio * (w - 110);
+                const py = h * 0.56;
+
+                for (let i = 0; i < count; i++) {
+                    this.state.particles.push({
+                        x: px,
+                        y: py,
+                        vx: (Math.random() - 0.5) * 180,
+                        vy: (Math.random() - 0.7) * 160,
+                        life: 0.7 + Math.random() * 0.4,
+                        color,
+                        size: 3 + Math.random() * 4
+                    });
+                }
+            }
+
+            drawChaseCanvas() {
+                if (!this.ctx || !this.canvas) return;
+                const ctx = this.ctx;
+                const w = this.canvas.width / (window.devicePixelRatio || 1);
+                const h = this.canvas.height / (window.devicePixelRatio || 1);
+
+                // Fundo gradiente noturno com malha geométrica
+                const bgGrad = ctx.createLinearGradient(0, 0, w, 0);
+                bgGrad.addColorStop(0, '#1e1b4b');
+                bgGrad.addColorStop(0.5, '#0f172a');
+                bgGrad.addColorStop(1, '#064e3b');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                // Formas geométricas decorativas no horizonte
+                ctx.strokeStyle = 'rgba(129, 140, 248, 0.14)';
+                ctx.lineWidth = 1.5;
+                for (let gx = 20; gx < w; gx += 45) {
+                    ctx.beginPath();
+                    ctx.moveTo(gx, 0);
+                    ctx.lineTo(gx, h);
+                    ctx.stroke();
+                }
+
+                const trackY = h * 0.68;
+                const startX = 40;
+                const endX = w - 58;
+                const trackLen = Math.max(100, endX - startX);
+
+                // Trilho principal
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.roundRect(startX - 10, trackY - 10, trackLen + 25, 20, 10);
+                ctx.fill();
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Marcos de distância (25%, 50%, 75%)
+                [0.25, 0.5, 0.75].forEach(frac => {
+                    const mx = startX + frac * trackLen;
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(mx - 1.5, trackY - 8, 3, 16);
+                });
+
+                // Destino: BANKER SEGURO (Fortaleza Geométrica à direita)
+                const bankerX = endX;
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+                ctx.beginPath();
+                ctx.arc(bankerX, trackY - 12, 28, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#10b981';
+                ctx.strokeStyle = '#a7f3d0';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(bankerX - 18, trackY + 6);
+                ctx.lineTo(bankerX - 18, trackY - 18);
+                ctx.lineTo(bankerX, trackY - 32);
+                ctx.lineTo(bankerX + 18, trackY - 18);
+                ctx.lineTo(bankerX + 18, trackY + 6);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ecfdf5';
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('BANKER', bankerX, trackY + 22);
+
+                // Posição proporcional do Jogador e da Ameaça
+                const playerFrac = Math.min(1, Math.max(0, this.state.playerPos / this.state.targetDist));
+                const chaserFrac = Math.min(1, Math.max(0, this.state.chaserPos / this.state.targetDist));
+
+                const playerX = startX + playerFrac * trackLen;
+                const chaserX = startX + chaserFrac * trackLen;
+
+                // Rastro percorrido pelo jogador
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.moveTo(startX, trackY);
+                ctx.lineTo(playerX, trackY);
+                ctx.stroke();
+
+                // Sombra / Onda do Caos (Perseguidor)
+                const pulse = Math.sin(performance.now() / 160) * 4;
+                const dangerGrad = ctx.createLinearGradient(0, 0, chaserX + 20, 0);
+                dangerGrad.addColorStop(0, 'rgba(225, 29, 72, 0.75)');
+                dangerGrad.addColorStop(1, 'rgba(190, 18, 60, 0.95)');
+                ctx.fillStyle = dangerGrad;
+                ctx.beginPath();
+                ctx.arc(chaserX, trackY - 10, 22 + pulse * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Espinhos geométricos do perseguidor
+                ctx.fillStyle = '#fda4af';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText('👾', chaserX, trackY - 5);
+
+                // Avatar do Herói Matemático na pista
+                const char = this.getSelectedChar();
+                const bob = Math.sin(performance.now() / 120) * 3;
+
+                // Escudo visual se ativo
+                if (this.state.shieldActive) {
+                    ctx.strokeStyle = '#22d3ee';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(playerX, trackY - 14 + bob, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = char.accent;
+                ctx.beginPath();
+                ctx.arc(playerX, trackY - 14 + bob, 17, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(char.name[0], playerX, trackY - 9 + bob);
+
+                // Nome acima do corredor
+                ctx.fillStyle = '#fde047';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillText(char.name, playerX, trackY - 36 + bob);
+
+                // Partículas de feedback
+                this.state.particles.forEach(p => {
+                    p.x += p.vx * 0.016;
+                    p.y += p.vy * 0.016;
+                    p.life -= 0.025;
+                    if (p.life > 0) {
+                        ctx.globalAlpha = Math.max(0, p.life);
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                });
+                this.state.particles = this.state.particles.filter(p => p.life > 0);
+            }
+        }
+
+        // Inicializa o jogo ao carregar a página
+        let app;
+        window.onload = () => {
+            app = new GeometryEscapeGame();
+        };
+    </script>
+</body>
+</html>
