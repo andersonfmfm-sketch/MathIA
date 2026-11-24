@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATH FIGHT - Duelo 1v1 de Matemática</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Teko:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background-color: #050b14;
+            color: #f8fafc;
+        }
+
+        /* Ocultar barra de rolagem em todos os navegadores */
+        html, body {
+            height: 100%;
+            max-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .font-arcade {
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .font-action {
+            font-family: 'Teko', sans-serif;
+            letter-spacing: 1.5px;
+        }
+
+        /* Sprite & Fighter Animations */
+        @keyframes floatIdle {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+
+        @keyframes attackP1 {
+            0% { transform: translateX(0) scale(1); }
+            40% { transform: translateX(180px) scale(1.3) rotate(15deg); }
+            100% { transform: translateX(0) scale(1); }
+        }
+
+        @keyframes attackP2 {
+            0% { transform: translateX(0) scale(1); }
+            40% { transform: translateX(-180px) scale(1.3) rotate(-15deg); }
+            100% { transform: translateX(0) scale(1); }
+        }
+
+        @keyframes hitReact {
+            0%, 100% { transform: translateX(0); filter: brightness(1); }
+            20% { transform: translateX(-15px); filter: brightness(3) sepia(1) hue-rotate(-50deg); }
+            40% { transform: translateX(15px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+
+        @keyframes victoryDance {
+            0%, 100% { transform: translateY(0) scale(1.1); }
+            50% { transform: translateY(-20px) scale(1.25) rotate(5deg); }
+        }
+
+        .idle-anim { animation: floatIdle 3s ease-in-out infinite; }
+        .attack-p1-anim { animation: attackP1 0.6s ease-in-out; }
+        .attack-p2-anim { animation: attackP2 0.6s ease-in-out; }
+        .hit-anim { animation: hitReact 0.5s ease-in-out; }
+        .victory-anim { animation: victoryDance 1s ease-in-out infinite; }
+
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6)); }
+            50% { filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.9)); }
+        }
+
+        .glow-pulse { animation: pulseGlow 1.5s infinite; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between select-none relative">
+
+    <!-- Header / Audio Control Bar -->
+    <header class="w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 py-2 sticky top-0 z-40 shrink-0">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="showScreen('menu')">
+                <div class="bg-gradient-to-br from-amber-500 to-red-600 text-slate-950 px-2.5 py-0.5 rounded-xl font-bold font-action text-2xl shadow-lg shadow-red-500/30">
+                    <i class="fa-solid fa-hand-fist"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 font-action">
+                    MATH FIGHT <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-400 border border-amber-500/30 font-normal">1v1 ARENA</span>
+                </h1>
+            </div>
+
+            <!-- Audio & Sound Options -->
+            <div class="flex items-center space-x-2 text-xs">
+                <!-- Music Toggle -->
+                <button id="btn-toggle-music" onclick="toggleMusic()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition flex items-center space-x-1.5">
+                    <i id="music-icon" class="fa-solid fa-music text-amber-400"></i>
+                    <span id="music-text" class="hidden sm:inline">Música ON</span>
+                </button>
+                <!-- Music Volume Slider -->
+                <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.4" oninput="setMusicVolume(this.value)" class="w-14 sm:w-18 accent-amber-500 cursor-pointer">
+
+                <!-- SFX Toggle -->
+                <button id="btn-toggle-sfx" onclick="toggleSFX()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition flex items-center space-x-1.5">
+                    <i id="sfx-icon" class="fa-solid fa-volume-high text-cyan-400"></i>
+                    <span id="sfx-text" class="hidden sm:inline">Efeitos ON</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN GAME WORKSPACE -->
+    <main class="flex-grow flex items-center justify-center p-2 relative z-10 overflow-hidden">
+
+        <!-- 1. MENU INICIAL -->
+        <section id="screen-menu" class="w-full max-w-4xl text-center space-y-4 py-2 animate-fade-in">
+            <div class="space-y-1">
+                <div class="inline-block px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full text-red-400 text-[10px] font-bold tracking-widest uppercase">
+                    Campeonato Profissional de Matemática
+                </div>
+                <h2 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white font-action drop-shadow-[0_5px_15px_rgba(239,68,68,0.4)]">
+                    MATH FIGHT 1v1
+                </h2>
+                <p class="text-slate-400 max-w-lg mx-auto text-xs md:text-sm">
+                    Escolha seu lutador favorito, encare desafios matemáticos e conquiste o cinturão!
+                </p>
+            </div>
+
+            <!-- Main Menu Action Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+                <button onclick="startOfflineMode()" class="py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:brightness-110 font-extrabold text-slate-950 text-base shadow-xl shadow-red-600/25 border-t border-amber-300/40 transform hover:-translate-y-0.5 transition duration-200 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-user-group text-lg"></i>
+                    <span>JOGAR OFFLINE (2P)</span>
+                </button>
+
+                <button onclick="showScreen('lobby')" class="py-3 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 border-2 border-cyan-500/50 hover:border-cyan-400 font-extrabold text-cyan-400 text-base shadow-xl shadow-cyan-500/10 transform hover:-translate-y-0.5 transition duration-200 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-globe text-lg"></i>
+                    <span>JOGAR ONLINE</span>
+                </button>
+
+                <button onclick="showScreen('characters')" class="py-2.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 font-bold text-slate-200 text-xs shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-users text-amber-400"></i>
+                    <span>PERSONAGENS</span>
+                </button>
+
+                <button onclick="showScreen('difficulty')" class="py-2.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 font-bold text-slate-200 text-xs shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bolt text-red-500"></i>
+                    <span>DIFICULDADE</span>
+                </button>
+
+                <button onclick="showScreen('instructions')" class="col-span-1 sm:col-span-2 py-2 px-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition text-xs flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>COMO JOGAR & REGRAS</span>
+                </button>
+            </div>
+
+            <!-- Current Players / Setup Summary -->
+            <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl max-w-md mx-auto flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-2">
+                    <div id="summary-p1-icon" class="text-2xl">🐉</div>
+                    <div class="text-left">
+                        <div class="text-slate-500 uppercase font-bold text-[9px]">Jogador 1</div>
+                        <div id="summary-p1-name" class="font-bold text-amber-400 text-xs">Goku</div>
+                    </div>
+                </div>
+                <div class="text-center font-action text-base text-slate-500">VS</div>
+                <div class="flex items-center space-x-2 flex-row-reverse text-right">
+                    <div id="summary-p2-icon" class="text-2xl">🍖</div>
+                    <div>
+                        <div class="text-slate-500 uppercase font-bold text-[9px]">Jogador 2</div>
+                        <div id="summary-p2-name" class="font-bold text-cyan-400 text-xs">Luffy</div>
+                    </div>
+                </div>
+                <div class="ml-2 pl-2 border-l border-slate-800">
+                    <span id="summary-diff-badge" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">
+                        FÁCIL (30s)
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. ESCOLHA DE PERSONAGENS -->
+        <section id="screen-characters" class="hidden w-full max-w-4xl space-y-4 py-2 animate-fade-in">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white font-action tracking-wider">SELEÇÃO DE LUTADORES</h2>
+                    <p class="text-[11px] text-slate-400">Escolha os personagens para o Jogador 1 e Jogador 2.</p>
+                </div>
+                <button onclick="showScreen('menu')" class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                </button>
+            </div>
+
+            <!-- Active Selector Indicator Switcher -->
+            <div class="flex justify-center space-x-3">
+                <button id="btn-select-for-p1" onclick="setActivePlayerSelecting('p1')" class="py-2 px-4 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs border-2 border-amber-300 shadow-lg">
+                    Escolhendo para JOGADOR 1 (<span id="p1-char-label">Goku</span>)
+                </button>
+                <button id="btn-select-for-p2" onclick="setActivePlayerSelecting('p2')" class="py-2 px-4 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">
+                    Escolhendo para JOGADOR 2 (<span id="p2-char-label">Luffy</span>)
+                </button>
+            </div>
+
+            <!-- Roster of 5 Fixed Characters -->
+            <div id="character-roster" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <!-- Injected dynamically via JS -->
+            </div>
+
+            <div class="text-center pt-1">
+                <button onclick="showScreen('menu')" class="py-2.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-red-600 font-extrabold text-slate-950 text-xs shadow-lg hover:brightness-110 transition">
+                    CONFIRMAR LUTADORES
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. ESCOLHA DE DIFICULDADE -->
+        <section id="screen-difficulty" class="hidden w-full max-w-3xl space-y-4 py-2 animate-fade-in">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white font-action tracking-wider">SELEÇÃO DE DIFICULDADE</h2>
+                    <p class="text-[11px] text-slate-400">O tempo e a complexidade valerão igualmente para ambos.</p>
+                </div>
+                <button onclick="showScreen('menu')" class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <!-- Easy -->
+                <div id="diff-card-easy" onclick="setDifficulty('easy')" class="cursor-pointer bg-slate-900 border-2 border-emerald-500 rounded-2xl p-4 transition flex flex-col justify-between space-y-2 hover:brightness-110">
+                    <div class="space-y-1">
+                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">FÁCIL</span>
+                        <h3 class="text-lg font-bold text-white">Iniciante das Contas</h3>
+                        <p class="text-[11px] text-slate-400">Adição, Subtração, Multiplicação e Divisão simples.</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-xs font-mono text-slate-300">
+                        <span>Tempo: <strong>10 seg</strong></span>
+                        <i class="fa-regular fa-clock text-emerald-400"></i>
+                    </div>
+                </div>
+
+                <!-- Medium -->
+                <div id="diff-card-medium" onclick="setDifficulty('medium')" class="cursor-pointer bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 transition flex flex-col justify-between space-y-2 hover:border-amber-500">
+                    <div class="space-y-1">
+                        <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/30">MÉDIO</span>
+                        <h3 class="text-lg font-bold text-white">Desafiador Urbano</h3>
+                        <p class="text-[11px] text-slate-400">Cálculos intermediários, frações e desafios matemáticos.</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-xs font-mono text-slate-300">
+                        <span>Tempo: <strong>10 seg</strong></span>
+                        <i class="fa-regular fa-clock text-amber-400"></i>
+                    </div>
+                </div>
+
+                <!-- Hard -->
+                <div id="diff-card-hard" onclick="setDifficulty('hard')" class="cursor-pointer bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 transition flex flex-col justify-between space-y-2 hover:border-rose-500">
+                    <div class="space-y-1">
+                        <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 text-[10px] font-bold border border-rose-500/30">DIFÍCIL</span>
+                        <h3 class="text-lg font-bold text-white">Mestre Supremo</h3>
+                        <p class="text-[11px] text-slate-400">Equações avançadas, porcentagens e raciocínio lógico.</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-xs font-mono text-slate-300">
+                        <span>Tempo: <strong>10 seg</strong></span>
+                        <i class="fa-regular fa-clock text-rose-400"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. COMO JOGAR SCREEN -->
+        <section id="screen-instructions" class="hidden w-full max-w-3xl space-y-4 py-2 animate-fade-in">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white font-action tracking-wider">REGRAS DO TORNEIO</h2>
+                    <p class="text-[11px] text-slate-400">Tudo o que você precisa saber para vencer no ringue.</p>
+                </div>
+                <button onclick="showScreen('menu')" class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
+                <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1">
+                    <div class="text-amber-400 font-bold text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-trophy text-amber-400"></i>
+                        <span>Melhor de 3 Rodadas</span>
+                    </div>
+                    <p class="text-[11px]">A partida é disputada em até 3 rodadas. Vencer 2 rodadas garante a vitória imediata!</p>
+                </div>
+
+                <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1">
+                    <div class="text-rose-400 font-bold text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-heart text-rose-500"></i>
+                        <span>10 HP por Rodada</span>
+                    </div>
+                    <p class="text-[11px]">Cada jogador inicia cada rodada com 10 vidas. Erros removem 1 vida.</p>
+                </div>
+
+                <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1">
+                    <div class="text-cyan-400 font-bold text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-rotate text-cyan-400"></i>
+                        <span>Turnos Alternados (1v1)</span>
+                    </div>
+                    <p class="text-[11px]">Um jogador responde por vez. Se acertar, ataca! Se errar ou esgotar o tempo, perde a vida.</p>
+                </div>
+
+                <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-1">
+                    <div class="text-emerald-400 font-bold text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-clock text-emerald-400"></i>
+                        <span>Cronômetro Individual</span>
+                    </div>
+                    <p class="text-[11px]">Cada jogador possui seu tempo limite por pergunta de acordo com a dificuldade.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. ONLINE LOBBY / ROOM MANAGEMENT -->
+        <section id="screen-lobby" class="hidden w-full max-w-xl text-center space-y-4 py-4 animate-fade-in">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl relative">
+                <div class="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl mx-auto animate-pulse">
+                    <i class="fa-solid fa-wifi"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-white font-action tracking-wider">LOBBY MULTIPLAYER ONLINE</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Crie uma nova sala ou digite o código do seu oponente.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="createOnlineRoom()" class="w-full py-3 px-5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs shadow-lg transition">
+                        CRIAR NOVA SALA
+                    </button>
+
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="join-room-input" placeholder="CÓDIGO (EX: 4829)" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-center text-base font-mono font-bold tracking-widest text-amber-400 focus:outline-none focus:border-amber-500">
+                        <button onclick="joinOnlineRoom()" class="py-2.5 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition">
+                            ENTRAR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Waiting Info -->
+                <div id="lobby-wait-box" class="hidden bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1">
+                    <div class="text-[9px] font-mono text-slate-500 uppercase">Código para o Oponente</div>
+                    <div id="lobby-room-code-display" class="text-3xl font-mono font-bold text-amber-400 tracking-widest">----</div>
+                    <p class="text-[11px] text-slate-400">Aguardando 2º jogador se conectar...</p>
+                </div>
+
+                <button onclick="showScreen('menu')" class="py-2 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs font-bold text-slate-400 border border-slate-700 transition">
+                    VOLTAR AO MENU
+                </button>
+            </div>
+        </section>
+
+        <!-- 6. RINGUE DE LUTA (GAMEPLAY SCREEN) -->
+        <section id="screen-arena" class="hidden w-full max-w-5xl space-y-3 animate-fade-in flex flex-col justify-between h-full max-h-[85vh]">
+
+            <!-- HUD SUPERIOR (HP, RODADAS, PLACAR & CRONÔMETRO) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-xl backdrop-blur-md shrink-0">
+                <!-- Round Header -->
+                <div class="flex justify-between items-center text-[11px] font-bold border-b border-slate-800 pb-1.5 mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span id="hud-mode-badge" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[9px]">
+                            OFFLINE 2P
+                        </span>
+                        <span id="hud-round-label" class="text-slate-300 font-mono">RODADA 1 DE 3</span>
+                    </div>
+
+                    <!-- Series Wins Tracker -->
+                    <div class="flex items-center space-x-3 text-amber-400 font-mono">
+                        <span id="hud-p1-wins" class="text-xs">P1: 0 🏆</span>
+                        <span class="text-slate-600">|</span>
+                        <span id="hud-p2-wins" class="text-xs">P2: 0 🏆</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-12 gap-2 items-center">
+                    <!-- Player 1 HP & Info -->
+                    <div class="col-span-5 space-y-1">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span id="hud-p1-name" class="text-amber-400 truncate">Goku</span>
+                            <span id="hud-p1-pts" class="text-slate-400 font-mono text-[10px]">0 PTS</span>
+                        </div>
+                        <div id="hud-p1-hearts" class="flex space-x-0.5 text-xs text-rose-500 overflow-hidden">
+                            <!-- Hearts injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Center Timer & Current Turn Indicator -->
+                    <div class="col-span-2 text-center flex flex-col items-center">
+                        <div class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">TEMPO</div>
+                        <div id="arena-timer" class="text-2xl md:text-4xl font-extrabold font-mono text-amber-400 drop-shadow">
+                            30
+                        </div>
+                    </div>
+
+                    <!-- Player 2 HP & Info -->
+                    <div class="col-span-5 space-y-1 text-right">
+                        <div class="flex justify-between items-center text-xs font-bold flex-row-reverse">
+                            <span id="hud-p2-name" class="text-cyan-400 truncate">Luffy</span>
+                            <span id="hud-p2-pts" class="text-slate-400 font-mono text-[10px]">0 PTS</span>
+                        </div>
+                        <div id="hud-p2-hearts" class="flex space-x-0.5 text-xs text-rose-500 justify-end overflow-hidden">
+                            <!-- Hearts injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIGHTING RING ARENA CENÁRIO -->
+            <div class="relative w-full h-44 sm:h-56 md:h-64 bg-slate-950 rounded-3xl border-2 border-slate-800 overflow-hidden shadow-2xl flex flex-col justify-between shrink-0">
+                <!-- Dynamic Arena Background -->
+                <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950/70 pointer-events-none"></div>
+
+                <!-- Spotlights -->
+                <div class="absolute -top-12 left-1/4 w-36 h-72 bg-amber-500/10 blur-3xl transform -rotate-12 pointer-events-none"></div>
+                <div class="absolute -top-12 right-1/4 w-36 h-72 bg-cyan-500/10 blur-3xl transform rotate-12 pointer-events-none"></div>
+
+                <!-- Ring Ropes -->
+                <div class="absolute bottom-10 inset-x-0 h-1.5 bg-red-600 shadow-md opacity-70"></div>
+                <div class="absolute bottom-16 inset-x-0 h-1.5 bg-blue-600 shadow-md opacity-70"></div>
+                <div class="absolute bottom-22 inset-x-0 h-1.5 bg-amber-500 shadow-md opacity-50"></div>
+
+                <!-- Arena Announcement & Turn Banner -->
+                <div class="relative z-10 pt-2 text-center">
+                    <div id="turn-indicator-banner" class="inline-block px-4 py-0.5 rounded-full bg-slate-950/90 border-2 border-amber-500/60 text-[10px] font-extrabold text-amber-400 uppercase tracking-widest shadow-lg animate-pulse">
+                        VEZ DE: JOGADOR 1
+                    </div>
+                </div>
+
+                <!-- FIGHTER SPRITES STAGE -->
+                <div class="relative z-20 flex justify-between items-end px-6 md:px-16 pb-3 h-full">
+
+                    <!-- Player 1 Fighter Sprite -->
+                    <div id="p1-sprite-box" class="relative transition-all duration-300 idle-anim">
+                        <div id="p1-avatar-graphic" class="text-6xl sm:text-7xl md:text-8xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.8)] transform">
+                            🐉
+                        </div>
+                        <div class="w-16 h-2.5 bg-black/50 rounded-full blur-sm mx-auto mt-0.5"></div>
+                    </div>
+
+                    <!-- Combat FX Floating Overlay -->
+                    <div id="combat-effect-overlay" class="absolute inset-0 pointer-events-none flex items-center justify-center hidden z-30">
+                        <span id="combat-effect-text" class="text-3xl sm:text-5xl font-extrabold font-action text-amber-400 drop-shadow-[0_5px_10px_rgba(0,0,0,0.9)] animate-bounce">
+                            GOLPE DIRECTO!
+                        </span>
+                    </div>
+
+                    <!-- Player 2 Fighter Sprite -->
+                    <div id="p2-sprite-box" class="relative transition-all duration-300 idle-anim">
+                        <div id="p2-avatar-graphic" class="text-6xl sm:text-7xl md:text-8xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.8)] transform scale-x-[-1]">
+                            🍖
+                        </div>
+                        <div class="w-16 h-2.5 bg-black/50 rounded-full blur-sm mx-auto mt-0.5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTION & MULTIPLE CHOICE CARD -->
+            <div id="question-card" class="bg-slate-900 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-xl space-y-2 shrink-0">
+                <div class="text-center space-y-0.5">
+                    <span id="question-category" class="text-[10px] font-semibold text-amber-400 tracking-wider uppercase">
+                        Desafio Matemático
+                    </span>
+                    <h3 id="question-text" class="text-2xl md:text-3xl font-extrabold text-white font-mono tracking-wide">
+                        12 + 15 = ?
+                    </h3>
+                </div>
+
+                <!-- Answer Options Grid -->
+                <div id="options-grid" class="grid grid-cols-2 gap-2 max-w-xl mx-auto">
+                    <!-- Dynamic option buttons -->
+                </div>
+
+                <!-- Turn status prompt -->
+                <div id="round-status-msg" class="text-center text-[10px] font-bold text-slate-400 h-4">
+                    Aguardando resposta do jogador atual...
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. TELA DE RESULTADO / GAME OVER -->
+        <section id="screen-gameover" class="hidden w-full max-w-2xl text-center space-y-4 py-4 animate-fade-in">
+            <div class="bg-slate-900 border-2 border-amber-500/50 rounded-3xl p-6 space-y-4 shadow-2xl relative overflow-hidden">
+                <!-- Winner Trophy Badge -->
+                <div class="w-16 h-16 rounded-full bg-amber-500/10 border-2 border-amber-500 flex items-center justify-center text-amber-400 text-3xl mx-auto glow-pulse">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div class="space-y-1">
+                    <h2 class="text-4xl md:text-6xl font-extrabold text-white font-action tracking-wider">
+                        CAMPEÃO DO MATH FIGHT!
+                    </h2>
+                    <p id="winner-announcement" class="text-amber-400 text-xl font-bold">
+                        Goku venceu o campeonato!
+                    </p>
+                </div>
+
+                <!-- Winner Card Details -->
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-center space-x-4">
+                    <div id="winner-avatar-display" class="text-6xl animate-bounce">
+                        🐉
+                    </div>
+                    <div class="text-left space-y-0.5">
+                        <div id="winner-char-name" class="text-xl font-extrabold text-white">Goku</div>
+                        <div id="winner-stats-details" class="text-xs text-slate-400 font-mono space-y-0.5">
+                            <div>Placar de Rodadas: 2 - 1</div>
+                            <div>Pontuação Total: 600 PTS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button onclick="restartMatch()" class="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-red-600 hover:brightness-110 font-extrabold text-slate-950 text-sm shadow-lg transition">
+                        JOGAR NOVAMENTE
+                    </button>
+                    <button onclick="showScreen('menu')" class="py-3 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-sm border border-slate-700 transition">
+                        VOLTAR AO MENU
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-slate-900/40 border-t border-slate-800/80 py-1.5 text-center text-[10px] text-slate-500 shrink-0">
+        MATH FIGHT 1v1 &copy; Torneio de Luta Matemática de Alta Performance.
+    </footer>
+
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 1. FIXED 5 RECOGNIZABLE FIGHTERS ROSTER
+        const FIXED_CHARACTERS = [
+            { id: 'goku', name: 'Goku', icon: '🐉', style: 'Artes Marciais Saiyajin', atkText: 'KAMEHAMEHA!' },
+            { id: 'luffy', name: 'Luffy', icon: '🍖', style: 'Estilo Borracha Gomu', atkText: 'GOMU GOMU NO PISTOL!' },
+            { id: 'naruto', name: 'Naruto', icon: '🍥', style: 'Ninjutsu Rasengan', atkText: 'RASENGAN!' },
+            { id: 'zoro', name: 'Zoro', icon: '⚔️', style: 'Estilo Santoryu (3 Espadas)', atkText: 'ONIGIRI!' },
+            { id: 'peppa', name: 'Peppa Pig', style: 'Lama Profissional', icon: '🐷', atkText: 'PULO NA LAMA DEVASTADOR!' }
+        ];
+
+        // 2. AUDIO SYNTHESIZER & SOUND EFFECTS ENGINE (Web Audio API)
+        class MathFightAudio {
+            constructor() {
+                this.ctx = null;
+                this.musicEnabled = true;
+                this.sfxEnabled = true;
+                this.musicVolume = 0.4;
+                this.isPlayingMusic = false;
+                this.musicInterval = null;
+                this.currentMusicTempo = 130;
+                this.savedPrefs();
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            savedPrefs() {
+                const m = localStorage.getItem('mf_music');
+                const s = localStorage.getItem('mf_sfx');
+                if (m !== null) this.musicEnabled = (m === 'true');
+                if (s !== null) this.sfxEnabled = (s === 'true');
+            }
+
+            playHitSFX() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            // Character Specific Attack Sound Effects Synthesizers
+            playCharacterAttackSFX(charId) {
+                if (!this.sfxEnabled) return;
+                this.init();
+
+                const now = this.ctx.currentTime;
+
+                if (charId === 'goku') {
+                    // Kamehameha Energy Blast Synth (Charging + Beam Blast)
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(520, now + 0.35);
+                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.7);
+                    
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.6, now + 0.35);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
+                } else if (charId === 'luffy') {
+                    // Gomu Gomu Rubber Stretch & Snap Impact
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.35);
+                    
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (charId === 'naruto') {
+                    // Rasengan Whirring Chakra Sphere Synth
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.linearRampToValueAtTime(950, now + 0.4);
+                    osc.frequency.linearRampToValueAtTime(300, now + 0.65);
+
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.65);
+                } else if (charId === 'zoro') {
+                    // Santoryu Katana Sword Slashing Steel Effect
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.exponentialRampToValueAtTime(250, now + 0.3);
+
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (charId === 'peppa') {
+                    // Peppa Mud Splash & Oink Pitch Wobble
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.setValueAtTime(340, now + 0.1);
+                    osc.frequency.setValueAtTime(220, now + 0.2);
+                    osc.frequency.exponentialRampToValueAtTime(70, now + 0.45);
+
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                }
+            }
+
+            playErrorSFX() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playBeepSFX() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playVictorySFX() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.12 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.12);
+                    osc.stop(this.ctx.currentTime + idx * 0.12 + 0.3);
+                });
+            }
+
+            // Synthesized Anime Battle Synthesizer Loop
+            startBattleMusic(tempo = 135) {
+                if (!this.musicEnabled) return;
+                this.init();
+                this.stopMusic();
+                this.isPlayingMusic = true;
+
+                const bassLine = [110, 110, 130, 110, 146, 130, 110, 98];
+                let step = 0;
+
+                const stepTime = (60 / tempo) * 250;
+                this.musicInterval = setInterval(() => {
+                    if (!this.musicEnabled) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = bassLine[step % bassLine.length];
+                    gain.gain.setValueAtTime(this.musicVolume * 0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + (stepTime / 1000) * 0.8);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + (stepTime / 1000) * 0.8);
+                    step++;
+                }, stepTime);
+            }
+
+            stopMusic() {
+                if (this.musicInterval) {
+                    clearInterval(this.musicInterval);
+                    this.musicInterval = null;
+                }
+                this.isPlayingMusic = false;
+            }
+        }
+
+        const audioEngine = new MathFightAudio();
+
+        // 3. GLOBAL GAME STATE
+        window.gameState = {
+            mode: 'offline', // 'offline' or 'online'
+            p1CharId: 'goku',
+            p2CharId: 'luffy',
+            activePlayerSelecting: 'p1',
+            difficulty: 'easy',
+            timerSeconds: 10,
+            
+            // Round & Match State
+            currentRound: 1, // Max 3
+            p1RoundWins: 0,
+            p2RoundWins: 0,
+
+            // Current Round HP & Scores
+            p1Hp: 10,
+            p2Hp: 10,
+            p1Score: 0,
+            p2Score: 0,
+
+            currentTurn: 'p1', // 'p1' or 'p2'
+            currentQuestion: null,
+            timerInterval: null,
+            timeLeft: 30,
+            questionHistory: [],
+
+            // Online specific
+            roomId: null,
+            playerRole: null, // 'p1' or 'p2'
+            userId: null,
+            roomUnsubscribe: null
+        };
+
+        // Firebase Init
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'math-fight-arena-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.warn("Auth fallback", err);
+            }
+        }
+        onAuthStateChanged(auth, user => { if (user) window.gameState.userId = user.uid; });
+        initAuth();
+
+        // 4. RANDOM VERIFIED MATH QUESTION GENERATOR
+        function generateQuestion(diff) {
+            let num1, num2, answer, options, text, category;
+
+            if (diff === 'easy') {
+                const op = Math.floor(Math.random() * 4);
+                if (op === 0) {
+                    num1 = Math.floor(Math.random() * 40) + 10;
+                    num2 = Math.floor(Math.random() * 40) + 10;
+                    answer = num1 + num2; text = `${num1} + ${num2} = ?`;
+                } else if (op === 1) {
+                    num1 = Math.floor(Math.random() * 50) + 20;
+                    num2 = Math.floor(Math.random() * 20) + 5;
+                    answer = num1 - num2; text = `${num1} - ${num2} = ?`;
+                } else if (op === 2) {
+                    num1 = Math.floor(Math.random() * 9) + 2;
+                    num2 = Math.floor(Math.random() * 9) + 2;
+                    answer = num1 * num2; text = `${num1} × ${num2} = ?`;
+                } else {
+                    num2 = Math.floor(Math.random() * 8) + 2;
+                    answer = Math.floor(Math.random() * 9) + 2;
+                    num1 = num2 * answer; text = `${num1} ÷ ${num2} = ?`;
+                }
+                category = "Operações Básicas (Fácil)";
+            } else if (diff === 'medium') {
+                const op = Math.floor(Math.random() * 3);
+                if (op === 0) {
+                    num1 = Math.floor(Math.random() * 15) + 11;
+                    num2 = Math.floor(Math.random() * 12) + 4;
+                    answer = num1 * num2; text = `${num1} × ${num2} = ?`;
+                } else if (op === 1) {
+                    const den = Math.floor(Math.random() * 4) + 2;
+                    const mult = Math.floor(Math.random() * 5) + 2;
+                    answer = mult; text = `Quanto é 1/${den} de ${den * mult}?`;
+                } else {
+                    const a = Math.floor(Math.random() * 10) + 5;
+                    const b = Math.floor(Math.random() * 8) + 2;
+                    answer = (a * 2) + b; text = `(2 × ${a}) + ${b} = ?`;
+                }
+                category = "Frações e Intermediário (Médio)";
+            } else {
+                const op = Math.floor(Math.random() * 3);
+                if (op === 0) {
+                    const perc = (Math.floor(Math.random() * 4) + 1) * 10;
+                    const val = (Math.floor(Math.random() * 5) + 1) * 20;
+                    answer = (perc / 100) * val; text = `Quanto é ${perc}% de ${val}?`;
+                } else if (op === 1) {
+                    const a = Math.floor(Math.random() * 12) + 3;
+                    const b = Math.floor(Math.random() * 9) + 2;
+                    const c = Math.floor(Math.random() * 15) + 5;
+                    answer = (a * b) - c; text = `(${a} × ${b}) - ${c} = ?`;
+                } else {
+                    const step = Math.floor(Math.random() * 6) + 3;
+                    const start = Math.floor(Math.random() * 10) + 1;
+                    answer = start + (step * 3);
+                    text = `Sequência: ${start}, ${start + step}, ${start + step * 2}, __?`;
+                }
+                category = "Porcentagens e Lógica (Difícil)";
+            }
+
+            options = [answer];
+            while (options.length < 4) {
+                let delta = (Math.floor(Math.random() * 6) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                let wrong = answer + delta;
+                if (wrong >= 0 && !options.includes(wrong)) {
+                    options.push(wrong);
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            return { text, options, answer, category };
+        }
+
+        // 5. NAVIGATION & SCREEN RENDERING
+        window.showScreen = function(screenId) {
+            const screens = ['menu', 'characters', 'difficulty', 'instructions', 'lobby', 'arena', 'gameover'];
+            screens.forEach(s => {
+                const el = document.getElementById(`screen-${s}`);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`screen-${screenId}`);
+            if (target) target.classList.remove('hidden');
+
+            if (screenId === 'characters') renderCharacterRoster();
+            if (screenId === 'menu') audioEngine.startBattleMusic(120);
+        };
+
+        // CHARACTER SELECTION FUNCTIONS
+        window.setActivePlayerSelecting = function(player) {
+            window.gameState.activePlayerSelecting = player;
+            document.getElementById('btn-select-for-p1').className = player === 'p1' ? 
+                "py-2.5 px-5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs border-2 border-amber-300 shadow-lg" :
+                "py-2.5 px-5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700";
+
+            document.getElementById('btn-select-for-p2').className = player === 'p2' ? 
+                "py-2.5 px-5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs border-2 border-cyan-300 shadow-lg" :
+                "py-2.5 px-5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700";
+
+            renderCharacterRoster();
+        };
+
+        function renderCharacterRoster() {
+            const container = document.getElementById('character-roster');
+            container.innerHTML = '';
+
+            FIXED_CHARACTERS.forEach(c => {
+                const isP1 = window.gameState.p1CharId === c.id;
+                const isP2 = window.gameState.p2CharId === c.id;
+
+                const card = document.createElement('div');
+                card.className = `cursor-pointer rounded-2xl p-4 bg-slate-900 border-2 ${isP1 ? 'border-amber-500 shadow-lg shadow-amber-500/20' : (isP2 ? 'border-cyan-500 shadow-lg shadow-cyan-500/20' : 'border-slate-800 hover:border-slate-700')} transition flex flex-col items-center text-center space-y-2 relative`;
+                
+                card.onclick = () => selectCharacter(c.id);
+
+                let badgeHTML = '';
+                if (isP1) badgeHTML += `<span class="absolute top-2 left-2 bg-amber-500 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.5 rounded">P1</span>`;
+                if (isP2) badgeHTML += `<span class="absolute top-2 right-2 bg-cyan-500 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.5 rounded">P2</span>`;
+
+                card.innerHTML = `
+                    ${badgeHTML}
+                    <div class="text-6xl my-2">${c.icon}</div>
+                    <div class="font-bold text-sm text-white">${c.name}</div>
+                    <div class="text-[10px] text-amber-400 font-semibold">${c.style}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            const p1 = FIXED_CHARACTERS.find(x => x.id === window.gameState.p1CharId);
+            const p2 = FIXED_CHARACTERS.find(x => x.id === window.gameState.p2CharId);
+            document.getElementById('p1-char-label').innerText = p1 ? p1.name : '';
+            document.getElementById('p2-char-label').innerText = p2 ? p2.name : '';
+            updateMenuSummary();
+        }
+
+        function selectCharacter(charId) {
+            const activeP = window.gameState.activePlayerSelecting;
+            if (activeP === 'p1') {
+                if (window.gameState.p2CharId === charId) {
+                    // Swap
+                    window.gameState.p2CharId = window.gameState.p1CharId;
+                }
+                window.gameState.p1CharId = charId;
+            } else {
+                if (window.gameState.p1CharId === charId) {
+                    // Swap
+                    window.gameState.p1CharId = window.gameState.p2CharId;
+                }
+                window.gameState.p2CharId = charId;
+            }
+            renderCharacterRoster();
+        }
+
+        window.setDifficulty = function(diff) {
+            window.gameState.difficulty = diff;
+            window.gameState.timerSeconds = 10;
+
+            ['easy', 'medium', 'hard'].forEach(d => {
+                const card = document.getElementById(`diff-card-${d}`);
+                if (card) {
+                    if (d === diff) {
+                        card.className = `cursor-pointer bg-slate-900 border-2 ${d === 'easy' ? 'border-emerald-500' : (d === 'medium' ? 'border-amber-500' : 'border-rose-500')} rounded-2xl p-4 transition flex flex-col justify-between space-y-2 hover:brightness-110`;
+                    } else {
+                        card.className = `cursor-pointer bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 transition flex flex-col justify-between space-y-2 hover:border-slate-700`;
+                    }
+                }
+            });
+            updateMenuSummary();
+        };
+
+        function updateMenuSummary() {
+            const p1 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p1CharId);
+            const p2 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p2CharId);
+            if (p1) {
+                document.getElementById('summary-p1-icon').innerText = p1.icon;
+                document.getElementById('summary-p1-name').innerText = p1.name;
+            }
+            if (p2) {
+                document.getElementById('summary-p2-icon').innerText = p2.icon;
+                document.getElementById('summary-p2-name').innerText = p2.name;
+            }
+            const diffName = window.gameState.difficulty === 'easy' ? 'FÁCIL (10s)' : (window.gameState.difficulty === 'medium' ? 'MÉDIO (10s)' : 'DIFÍCIL (10s)');
+            document.getElementById('summary-diff-badge').innerText = diffName;
+        }
+
+        // 6. MATCH GAMEPLAY LOGIC & TURN FLOW
+        window.startOfflineMode = function() {
+            window.gameState.mode = 'offline';
+            window.gameState.currentRound = 1;
+            window.gameState.p1RoundWins = 0;
+            window.gameState.p2RoundWins = 0;
+            window.gameState.p1Score = 0;
+            window.gameState.p2Score = 0;
+            startRound();
+        };
+
+        function startRound() {
+            window.gameState.p1Hp = 10;
+            window.gameState.p2Hp = 10;
+            window.gameState.currentTurn = 'p1';
+            window.gameState.questionHistory = [];
+
+            showScreen('arena');
+
+            const p1 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p1CharId);
+            const p2 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p2CharId);
+            document.getElementById('p1-avatar-graphic').innerText = p1 ? p1.icon : '🐉';
+            document.getElementById('p2-avatar-graphic').innerText = p2 ? p2.icon : '🍖';
+
+            const tempo = window.gameState.currentRound === 3 ? 160 : 135;
+            audioEngine.startBattleMusic(tempo);
+
+            updateArenaHUD();
+            nextTurnQuestion();
+        }
+
+        function updateArenaHUD() {
+            document.getElementById('hud-mode-badge').innerText = window.gameState.mode.toUpperCase();
+            document.getElementById('hud-round-label').innerText = `RODADA ${window.gameState.currentRound} DE 3`;
+            document.getElementById('hud-p1-wins').innerText = `P1: ${window.gameState.p1RoundWins} 🏆`;
+            document.getElementById('hud-p2-wins').innerText = `P2: ${window.gameState.p2RoundWins} 🏆`;
+
+            const p1 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p1CharId);
+            const p2 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p2CharId);
+
+            document.getElementById('hud-p1-name').innerText = p1 ? p1.name : 'P1';
+            document.getElementById('hud-p2-name').innerText = p2 ? p2.name : 'P2';
+            document.getElementById('hud-p1-pts').innerText = `${window.gameState.p1Score} PTS`;
+            document.getElementById('hud-p2-pts').innerText = `${window.gameState.p2Score} PTS`;
+
+            // Hearts Render
+            document.getElementById('hud-p1-hearts').innerHTML = Array.from({length: 10}, (_, i) => 
+                `<i class="fa-solid fa-heart ${i < window.gameState.p1Hp ? 'text-rose-500' : 'text-slate-700'}"></i>`
+            ).join('');
+
+            document.getElementById('hud-p2-hearts').innerHTML = Array.from({length: 10}, (_, i) => 
+                `<i class="fa-solid fa-heart ${i < window.gameState.p2Hp ? 'text-rose-500' : 'text-slate-700'}"></i>`
+            ).join('');
+
+            // Turn indicator
+            const activeName = window.gameState.currentTurn === 'p1' ? (p1 ? p1.name : 'JOGADOR 1') : (p2 ? p2.name : 'JOGADOR 2');
+            const turnBanner = document.getElementById('turn-indicator-banner');
+            turnBanner.innerText = `VEZ DE: ${activeName.toUpperCase()}`;
+            turnBanner.className = window.gameState.currentTurn === 'p1' ? 
+                "inline-block px-4 py-0.5 rounded-full bg-slate-950/90 border-2 border-amber-500/80 text-[10px] font-extrabold text-amber-400 uppercase tracking-widest shadow-lg animate-pulse" :
+                "inline-block px-4 py-0.5 rounded-full bg-slate-950/90 border-2 border-cyan-500/80 text-[10px] font-extrabold text-cyan-400 uppercase tracking-widest shadow-lg animate-pulse";
+        }
+
+        function nextTurnQuestion() {
+            clearInterval(window.gameState.timerInterval);
+
+            // Online Turn Guard check
+            const isMyTurn = window.gameState.mode === 'offline' || 
+                (window.gameState.mode === 'online' && window.gameState.currentTurn === window.gameState.playerRole);
+
+            const q = generateQuestion(window.gameState.difficulty);
+            window.gameState.currentQuestion = q;
+
+            document.getElementById('question-category').innerText = q.category;
+            document.getElementById('question-text').innerText = q.text;
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = `py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 font-bold text-lg text-slate-100 transition shadow-md ${!isMyTurn ? 'opacity-50 cursor-not-allowed' : 'hover:border-amber-400'}`;
+                btn.innerText = opt;
+                btn.disabled = !isMyTurn;
+                btn.onclick = () => handleAnswer(opt);
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('round-status-msg').innerText = isMyTurn ? 
+                "Sua vez de responder!" : "Aguardando o adversário responder...";
+
+            startQuestionTimer();
+        }
+
+        function startQuestionTimer() {
+            window.gameState.timeLeft = window.gameState.timerSeconds;
+            const timerEl = document.getElementById('arena-timer');
+            timerEl.innerText = window.gameState.timeLeft;
+
+            window.gameState.timerInterval = setInterval(() => {
+                window.gameState.timeLeft--;
+                timerEl.innerText = window.gameState.timeLeft;
+
+                if (window.gameState.timeLeft <= 3) audioEngine.playBeepSFX();
+
+                if (window.gameState.timeLeft <= 0) {
+                    clearInterval(window.gameState.timerInterval);
+                    handleAnswer(null); // Time out counts as wrong answer
+                }
+            }, 1000);
+        }
+
+        async function handleAnswer(selectedOpt) {
+            clearInterval(window.gameState.timerInterval);
+
+            const q = window.gameState.currentQuestion;
+            const isCorrect = (selectedOpt === q.answer);
+            const activeTurn = window.gameState.currentTurn;
+
+            const currentCharId = activeTurn === 'p1' ? window.gameState.p1CharId : window.gameState.p2CharId;
+
+            if (isCorrect) {
+                audioEngine.playCharacterAttackSFX(currentCharId);
+                audioEngine.playHitSFX();
+                if (activeTurn === 'p1') {
+                    window.gameState.p1Score += 100;
+                } else {
+                    window.gameState.p2Score += 100;
+                }
+                triggerAttackAnim(activeTurn);
+            } else {
+                audioEngine.playErrorSFX();
+                if (activeTurn === 'p1') {
+                    window.gameState.p1Hp = Math.max(0, window.gameState.p1Hp - 1);
+                } else {
+                    window.gameState.p2Hp = Math.max(0, window.gameState.p2Hp - 1);
+                }
+                triggerDefenseAnim(activeTurn);
+            }
+
+            updateArenaHUD();
+
+            // Online Sync Push
+            if (window.gameState.mode === 'online' && window.gameState.roomId) {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', window.gameState.roomId);
+                await updateDoc(roomRef, {
+                    p1Hp: window.gameState.p1Hp,
+                    p2Hp: window.gameState.p2Hp,
+                    p1Score: window.gameState.p1Score,
+                    p2Score: window.gameState.p2Score,
+                    currentTurn: activeTurn === 'p1' ? 'p2' : 'p1'
+                });
+            }
+
+            // Check if Round Ended by HP
+            if (window.gameState.p1Hp <= 0 || window.gameState.p2Hp <= 0) {
+                setTimeout(endRound, 1200);
+                return;
+            }
+
+            // Alternate turn
+            window.gameState.currentTurn = activeTurn === 'p1' ? 'p2' : 'p1';
+            setTimeout(() => {
+                updateArenaHUD();
+                nextTurnQuestion();
+            }, 1200);
+        }
+
+        function triggerAttackAnim(attacker) {
+            const p1Box = document.getElementById('p1-sprite-box');
+            const p2Box = document.getElementById('p2-sprite-box');
+            const effectOverlay = document.getElementById('combat-effect-overlay');
+            const effectText = document.getElementById('combat-effect-text');
+
+            const p1 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p1CharId);
+            const p2 = FIXED_CHARACTERS.find(c => c.id === window.gameState.p2CharId);
+
+            effectOverlay.classList.remove('hidden');
+
+            if (attacker === 'p1') {
+                p1Box.classList.add('attack-p1-anim');
+                p2Box.classList.add('hit-anim');
+                effectText.innerText = p1.atkText;
+                setTimeout(() => {
+                    p1Box.classList.remove('attack-p1-anim');
+                    p2Box.classList.remove('hit-anim');
+                    effectOverlay.classList.add('hidden');
+                }, 700);
+            } else {
+                p2Box.classList.add('attack-p2-anim');
+                p1Box.classList.add('hit-anim');
+                effectText.innerText = p2.atkText;
+                setTimeout(() => {
+                    p2Box.classList.remove('attack-p2-anim');
+                    p1Box.classList.remove('hit-anim');
+                    effectOverlay.classList.add('hidden');
+                }, 700);
+            }
+        }
+
+        function triggerDefenseAnim(defenderTurn) {
+            const effectOverlay = document.getElementById('combat-effect-overlay');
+            const effectText = document.getElementById('combat-effect-text');
+            effectOverlay.classList.remove('hidden');
+            effectText.innerText = "DEFESA / ERRO! -1 HP";
+
+            const box = defenderTurn === 'p1' ? document.getElementById('p1-sprite-box') : document.getElementById('p2-sprite-box');
+            box.classList.add('hit-anim');
+
+            setTimeout(() => {
+                box.classList.remove('hit-anim');
+                effectOverlay.classList.add('hidden');
+            }, 700);
+        }
+
+        function endRound() {
+            clearInterval(window.gameState.timerInterval);
+
+            // Determine round winner
+            let roundWinner = null;
+            if (window.gameState.p1Hp > window.gameState.p2Hp) roundWinner = 'p1';
+            else if (window.gameState.p2Hp > window.gameState.p1Hp) roundWinner = 'p2';
+            else {
+                // Highest score tiebreaker
+                roundWinner = window.gameState.p1Score >= window.gameState.p2Score ? 'p1' : 'p2';
+            }
+
+            if (roundWinner === 'p1') window.gameState.p1RoundWins++;
+            else window.gameState.p2RoundWins++;
+
+            // Check Best of 3 match condition
+            if (window.gameState.p1RoundWins === 2 || window.gameState.p2RoundWins === 2 || window.gameState.currentRound === 3) {
+                showGameOver();
+            } else {
+                window.gameState.currentRound++;
+                startRound();
+            }
+        }
+
+        // 7. ONLINE MULTIPLAYER MATCHMAKING (FIRESTORE REALTIME)
+        window.createOnlineRoom = async function() {
+            if (!window.gameState.userId) return;
+
+            window.gameState.mode = 'online';
+            window.gameState.playerRole = 'p1';
+            const roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            window.gameState.roomId = roomId;
+
+            document.getElementById('lobby-wait-box').classList.remove('hidden');
+            document.getElementById('lobby-room-code-display').innerText = roomId;
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            await setDoc(roomRef, {
+                roomId: roomId,
+                p1Id: window.gameState.userId,
+                p1Char: window.gameState.p1CharId,
+                p2Id: null,
+                p2Char: null,
+                difficulty: window.gameState.difficulty,
+                status: 'waiting',
+                currentTurn: 'p1',
+                p1Hp: 10, p2Hp: 10, p1Score: 0, p2Score: 0
+            });
+
+            listenToOnlineRoom(roomId);
+        };
+
+        window.joinOnlineRoom = async function() {
+            const inputCode = document.getElementById('join-room-input').value.trim();
+            if (!inputCode) return;
+
+            window.gameState.mode = 'online';
+            window.gameState.playerRole = 'p2';
+            window.gameState.roomId = inputCode;
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', inputCode);
+            const snap = await getDoc(roomRef);
+
+            if (snap.exists()) {
+                await updateDoc(roomRef, {
+                    p2Id: window.gameState.userId,
+                    p2Char: window.gameState.p2CharId,
+                    status: 'playing'
+                });
+                listenToOnlineRoom(inputCode);
+            } else {
+                alert("Sala não encontrada!");
+            }
+        };
+
+        function listenToOnlineRoom(roomId) {
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            window.gameState.roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+                if (!docSnap.exists()) return;
+                const data = docSnap.data();
+
+                if (data.status === 'playing' && document.getElementById('screen-arena').classList.contains('hidden')) {
+                    window.gameState.p1CharId = data.p1Char;
+                    if (data.p2Char) window.gameState.p2CharId = data.p2Char;
+                    window.gameState.currentRound = 1;
+                    window.gameState.p1RoundWins = 0;
+                    window.gameState.p2RoundWins = 0;
+                    startRound();
+                }
+
+                if (data.status === 'playing') {
+                    window.gameState.p1Hp = data.p1Hp;
+                    window.gameState.p2Hp = data.p2Hp;
+                    window.gameState.p1Score = data.p1Score;
+                    window.gameState.p2Score = data.p2Score;
+                    window.gameState.currentTurn = data.currentTurn;
+                    updateArenaHUD();
+                }
+            });
+        }
+
+        // 8. TELA DE CAMPEÃO (GAME OVER)
+        function showGameOver() {
+            showScreen('gameover');
+            audioEngine.stopMusic();
+            audioEngine.playVictorySFX();
+
+            const isP1Winner = window.gameState.p1RoundWins > window.gameState.p2RoundWins;
+            const winningChar = FIXED_CHARACTERS.find(c => c.id === (isP1Winner ? window.gameState.p1CharId : window.gameState.p2CharId));
+
+            document.getElementById('winner-announcement').innerText = `${winningChar.name} É O GRANDE CAMPEÃO!`;
+            document.getElementById('winner-avatar-display').innerText = winningChar.icon;
+            document.getElementById('winner-char-name').innerText = winningChar.name;
+            document.getElementById('winner-stats-details').innerHTML = `
+                <div>Placar Final de Rodadas: ${window.gameState.p1RoundWins} - ${window.gameState.p2RoundWins}</div>
+                <div>Pontuação P1: ${window.gameState.p1Score} | Pontuação P2: ${window.gameState.p2Score}</div>
+            `;
+
+            // Confetti Blast
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+            }
+        }
+
+        window.restartMatch = function() {
+            if (window.gameState.mode === 'offline') {
+                startOfflineMode();
+            } else {
+                showScreen('lobby');
+            }
+        };
+
+        // INITIAL START
+        updateMenuSummary();
+        renderCharacterRoster();
+    </script>
+</body>
+</html>
