@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carga Fracionária - O Desafio da Energia</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Tone.js for Sound Effects and Music Synthesizer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b132b;
+            color: #e0e1dd;
+        }
+        .tech-font {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+        /* Glassmorphism card styles */
+        .glass-panel {
+            background: rgba(28, 37, 65, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(72, 149, 239, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .fraction > span:first-child {
+            border-bottom: 2px solid currentColor;
+            padding-bottom: 2px;
+        }
+        .fraction > span:last-child {
+            padding-top: 2px;
+        }
+        /* Battery animation */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(67, 97, 238, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(76, 201, 240, 0.9); }
+        }
+        .charging-active {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <!-- OPENING MODAL WINDOW (JANELA DE ABERTURA) -->
+    <div id="opening-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 max-w-lg w-full text-center relative border border-cyan-500/40 shadow-2xl animate-fade-in">
+            
+            <!-- Tech Icon Header -->
+            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-cyan-400 text-slate-950 rounded-2xl flex items-center justify-center mx-auto mb-5 text-4xl shadow-lg shadow-cyan-500/30 transform -rotate-3">
+                <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
+
+            <!-- Title & Subtitle -->
+            <h2 class="tech-font text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 mb-2">
+                CARGA FRACIONÁRIA
+            </h2>
+            <div class="inline-block bg-cyan-950/80 text-cyan-300 text-xs px-3 py-1 rounded-full border border-cyan-500/30 font-semibold mb-4">
+                🎮 Desafio de Matemática • 7º Ano
+            </div>
+
+            <!-- Character Selection Area -->
+            <div class="mb-5 text-left">
+                <label class="block text-xs uppercase tracking-wider text-cyan-400 font-bold mb-2 text-center">
+                    <i class="fa-solid fa-user-astronaut mr-1"></i> Escolha seu Personagem Guiador:
+                </label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="selectCharacter('maria')" id="char-card-maria" class="char-select-btn p-2.5 rounded-xl border-2 border-cyan-400 bg-slate-900/90 text-center transition hover:scale-105 flex flex-col items-center">
+                        <span class="text-2xl mb-1">👩‍🔬</span>
+                        <span class="text-xs font-bold text-white block truncate w-full">Eng. Maria</span>
+                        <span class="text-[10px] text-cyan-300">Orientadora</span>
+                    </button>
+
+                    <button type="button" onclick="selectCharacter('zezinho')" id="char-card-zezinho" class="char-select-btn p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900/50 text-center transition hover:scale-105 flex flex-col items-center opacity-70">
+                        <span class="text-2xl mb-1">🤖</span>
+                        <span class="text-xs font-bold text-white block truncate w-full">Zezinho</span>
+                        <span class="text-[10px] text-amber-300">Engraçado</span>
+                    </button>
+
+                    <button type="button" onclick="selectCharacter('silva')" id="char-card-silva" class="char-select-btn p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900/50 text-center transition hover:scale-105 flex flex-col items-center opacity-70">
+                        <span class="text-2xl mb-1">👨‍🏫</span>
+                        <span class="text-xs font-bold text-white block truncate w-full">Prof. Silva</span>
+                        <span class="text-[10px] text-emerald-300">Especialista</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Character Intro Speech Box -->
+            <div class="bg-slate-900/90 rounded-2xl p-4 mb-5 border border-slate-700/80 flex items-center gap-3 text-left">
+                <div id="modal-char-avatar" class="w-12 h-12 rounded-full bg-cyan-600 flex-shrink-0 flex items-center justify-center text-2xl border-2 border-cyan-400 shadow-md">
+                    👩‍🔬
+                </div>
+                <div class="text-xs md:text-sm text-slate-200 leading-relaxed font-medium">
+                    <span id="modal-char-name" class="text-cyan-400 font-bold block mb-0.5">Engenheira Maria:</span>
+                    <span id="modal-char-speech">"Bem-vindo à Central! Acerte os cálculos fracionários para energizar o reator dos níveis 1 ao 20!"</span>
+                </div>
+            </div>
+
+            <!-- Rules Quick List -->
+            <div class="bg-slate-900/50 rounded-xl p-3 text-left text-xs text-slate-300 mb-6 border border-slate-800 space-y-1.5">
+                <p class="flex items-center gap-2"><i class="fa-solid fa-clock text-amber-400"></i> <strong>Temporizador:</strong> 45 segundos para resolver cada nível.</p>
+                <p class="flex items-center gap-2"><i class="fa-solid fa-rotate-left text-rose-400"></i> <strong>Erro ou Tempo:</strong> Volte imediatamente ao Nível 1!</p>
+                <p class="flex items-center gap-2"><i class="fa-solid fa-calculator text-cyan-400"></i> <strong>Respostas:</strong> Todas são números inteiros em Megawatts (MW).</p>
+            </div>
+
+            <!-- Action Button -->
+            <button onclick="closeOpeningModal()" class="w-full py-4 bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-400 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-cyan-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 tech-font tracking-wider text-lg">
+                COMEÇAR JOGO <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="w-full max-w-4xl mx-auto flex justify-between items-center pb-6 border-b border-slate-700/60">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-xl text-white shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+                <h1 class="tech-font text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                    CARGA FRACIONÁRIA
+                </h1>
+                <p class="text-xs text-slate-400">Engenharia de Energia Fracionada</p>
+            </div>
+        </div>
+        
+        <!-- Game Stats Header -->
+        <div class="flex items-center gap-4">
+            <button id="sound-btn" onclick="toggleSound()" class="glass-panel px-3 py-2 rounded-xl text-slate-300 hover:text-cyan-400 transition" title="Alternar Som">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <div class="glass-panel px-4 py-2 rounded-xl text-center">
+                <span class="text-xs text-slate-400 block uppercase tracking-wider">Pontos</span>
+                <span id="score-display" class="tech-font text-xl font-bold text-emerald-400">0</span>
+            </div>
+            <div class="glass-panel px-4 py-2 rounded-xl text-center">
+                <span class="text-xs text-slate-400 block uppercase tracking-wider">Vidas</span>
+                <div id="lives-display" class="flex gap-1 text-rose-500 mt-1">
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="w-full max-w-4xl mx-auto my-auto py-6">
+
+        <!-- START SCREEN -->
+        <div id="start-screen" class="glass-panel rounded-2xl p-8 text-center max-w-xl mx-auto">
+            <div class="w-20 h-20 bg-blue-500/10 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl border border-cyan-500/30">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2 class="tech-font text-3xl font-bold mb-3 text-white">Desafio de Frações - 7º Ano</h2>
+            <p class="text-slate-300 mb-6 leading-relaxed">
+                Aplique seus conhecimentos do 7º ano sobre frações para calcular a energia exata necessária! Avance pelos 20 níveis e torne-se o Engenheiro Mestre das Frações.
+            </p>
+
+            <div class="bg-slate-900/60 rounded-xl p-4 text-left text-sm text-slate-300 mb-8 border border-slate-700/50 space-y-2">
+                <div class="flex items-center gap-2 text-cyan-400 font-semibold mb-1">
+                    <i class="fa-solid fa-book-open"></i> Conteúdo por Fases (7º Ano):
+                </div>
+                <p>📘 <strong>Níveis 1-5:</strong> Fração de uma quantidade (Parte de um todo).</p>
+                <p>📘 <strong>Níveis 6-10:</strong> Soma e Subtração com mesmo denominador.</p>
+                <p>📘 <strong>Níveis 11-15:</strong> Soma e Subtração com denominadores diferentes (MMC).</p>
+                <p>📘 <strong>Níveis 16-20:</strong> Multiplicação de frações e números mistos.</p>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 tech-font tracking-wider text-lg">
+                INICIAR DESAFIO <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- GAMEPLAY SCREEN -->
+        <div id="game-screen" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            <!-- Left Panel: Problem & Info -->
+            <div class="md:col-span-7 glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <!-- Level indicator & Timer -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="tech-font bg-blue-900/60 text-cyan-300 px-3 py-1 rounded-lg border border-cyan-500/30 font-bold">
+                            NÍVEL <span id="level-display">1</span> / 20
+                        </span>
+                        <div id="timer-box" class="flex items-center gap-2 text-amber-400 font-mono text-lg font-bold bg-amber-950/40 px-3 py-1 rounded-lg border border-amber-500/30">
+                            <i class="fa-solid fa-stopwatch animate-pulse"></i>
+                            <span id="time-display">45</span>s
+                        </div>
+                    </div>
+
+                    <!-- Character Dialog Box (Personagens Brasileiros) -->
+                    <div id="character-dialog-box" class="bg-gradient-to-r from-slate-900 to-blue-950/70 border border-cyan-500/30 rounded-xl p-3 mb-4 flex items-center gap-3 shadow-md">
+                        <div id="char-avatar" class="w-12 h-12 rounded-full bg-cyan-600 flex-shrink-0 flex items-center justify-center text-2xl border-2 border-cyan-400 shadow-lg text-white">
+                            👩‍🔬
+                        </div>
+                        <div class="flex-1">
+                            <div id="char-name" class="tech-font text-xs text-cyan-400 font-bold uppercase tracking-wider">Engenheira Maria</div>
+                            <div id="char-speech" class="text-xs md:text-sm text-slate-200 font-medium leading-relaxed">"Olá! Sou a Eng. Maria. Vamos calcular a carga exata da bateria!"</div>
+                        </div>
+                    </div>
+
+                    <!-- Problem Display Area -->
+                    <div class="bg-slate-900/80 rounded-xl p-6 mb-6 border border-slate-700/80 text-center relative overflow-hidden">
+                        <div class="text-xs text-slate-400 uppercase tracking-widest mb-2">Especificação de Carga Requerida</div>
+                        <div class="text-slate-300 text-sm mb-4">Capacidade Total do Gerador: <strong id="total-capacity" class="text-cyan-400 text-base">100 MW</strong></div>
+                        
+                        <!-- Mathematical Problem Container -->
+                        <div id="math-problem" class="text-2xl md:text-3xl font-bold text-white my-4 flex items-center justify-center gap-3">
+                            <!-- Injected dynamically by JS -->
+                        </div>
+
+                        <p id="problem-hint" class="text-xs text-slate-400 italic">Calcule o valor numérico exato da carga em MW.</p>
+                    </div>
+                </div>
+
+                <!-- Input Controls -->
+                <div class="space-y-4">
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">
+                        Ajuste Fino de Potência (MW)
+                    </label>
+                    <div class="flex gap-3">
+                        <input type="number" id="charge-input" placeholder="Digite a carga..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-lg font-bold focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" min="0" step="1">
+                        <button onclick="submitCharge()" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition shadow-lg shadow-cyan-500/20 flex items-center gap-2 whitespace-nowrap tech-font">
+                            CARREGAR <i class="fa-solid fa-bolt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Visual Battery / Reactor Status -->
+            <div class="md:col-span-5 glass-panel rounded-2xl p-6 flex flex-col justify-between items-center text-center">
+                <h3 class="tech-font text-slate-300 text-sm font-semibold uppercase tracking-wider w-full text-left">
+                    Status do Reator
+                </h3>
+
+                <!-- Battery Visualiser -->
+                <div class="relative w-32 h-64 border-4 border-slate-600 rounded-2xl p-2 bg-slate-950/80 flex flex-col justify-end my-4 charging-active">
+                    <!-- Battery Terminal Cap -->
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-3 bg-slate-600 rounded-t-md"></div>
+                    
+                    <!-- Internal Charge Gauge -->
+                    <div id="battery-level" class="w-full bg-gradient-to-t from-cyan-600 to-blue-400 rounded-lg transition-all duration-300 relative flex items-center justify-center overflow-hidden" style="height: 0%;">
+                        <span id="battery-percentage-text" class="text-xs font-bold text-white drop-shadow-md">0 MW</span>
+                    </div>
+                </div>
+
+                <!-- Feedback Message -->
+                <div id="feedback-message" class="w-full p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300 text-sm font-medium min-h-[50px] flex items-center justify-center text-center">
+                    Aguardando entrada do operador...
+                </div>
+            </div>
+        </div>
+
+        <!-- END GAME / SUCCESS SCREEN -->
+        <div id="end-screen" class="hidden glass-panel rounded-2xl p-8 text-center max-w-md mx-auto">
+            <div id="end-icon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl border">
+                <!-- Icon injected by JS -->
+            </div>
+            <h2 id="end-title" class="tech-font text-3xl font-bold mb-2 text-white"></h2>
+            <p id="end-subtitle" class="text-slate-300 mb-6 text-sm"></p>
+
+            <div class="bg-slate-900/70 rounded-xl p-4 mb-6 border border-slate-700/50 space-y-2 text-left">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Nível Alcançado:</span>
+                    <span id="final-level" class="font-bold text-white">0 / 20</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Pontuação Total:</span>
+                    <span id="final-score" class="font-bold text-emerald-400">0</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg transition tech-font">
+                JOGAR NOVAMENTE <i class="fa-solid fa-rotate-right ml-2"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-4xl mx-auto text-center pt-4 text-xs text-slate-500 border-t border-slate-800">
+        Jogo Educativo de Matemática &bull; Frações e Proporções &bull; Níveis 1 a 20
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Game State Variables
+        let currentLevel = 1;
+        let score = 0;
+        let lives = 3;
+        let targetValue = 0;
+        let totalCapacity = 100;
+        let timer = null;
+        let timeLeft = 0;
+        let soundMuted = false;
+
+        // Personagens Selecionáveis e Falas Brasileiras COMPLETAS
+        const characters = {
+            maria: {
+                id: "maria",
+                name: "Engenheira Maria",
+                avatar: "👩‍🔬",
+                color: "border-cyan-400 bg-cyan-600",
+                intro: "Bem-vindo à Central! Vamos juntos calcular a energia exata da bateria dos níveis 1 ao 20!",
+                pitch: 1.0,
+                rate: 0.98,
+                greetings: [
+                    "Bora fazer essa conta e mandar ver na energia! Analise os números com bastante atenção.",
+                    "Foco no cálculo! A rede elétrica depende de você para não ficar no escuro!",
+                    "Não esqueça de simplificar a fração antes de fazer a multiplicação pelo valor total!",
+                    "Bora lá! Calcula essa carga certinho e ajusta o valor no gerador!",
+                    "Mãos à obra! A matemática fica super simples quando você faz cada passo com calma."
+                ],
+                taunts: [
+                    "Ops! O cálculo não deu certo desta vez. Vamos voltar ao nível 1 e tentar com mais atenção!",
+                    "Atenção ao denominador! Vamos reiniciar do começo para ajustar a carga correta.",
+                    "Não desanime! Revise a fração e recomece o desafio no Nível 1!"
+                ],
+                wins: [
+                    "Excelente trabalho! Carga configurada com perfeição!",
+                    "Muito bem! A energia subiu no nível exato sem sobrecarga!",
+                    "Parabéns! Cálculo preciso. Avançando para a próxima etapa!"
+                ]
+            },
+            zezinho: {
+                id: "zezinho",
+                name: "Robô Zezinho",
+                avatar: "🤖",
+                color: "border-amber-400 bg-amber-600",
+                intro: "Fala meu consagrado! Sou o Zezinho! Escolha a carga certa antes que meu circuito pife!",
+                pitch: 1.15,
+                rate: 1.05,
+                greetings: [
+                    "Bora lá, meu consagrado! Calcula essa carga certinho antes que o tempo acabe!",
+                    "Se o reator pifar por falta de matemática, a culpa é sua hein! Concentra aí!",
+                    "Manda ver nesse cálculo fracionário! Tô de olho na bateria!"
+                ],
+                taunts: [
+                    "Vixi Maria! O cálculo passou longe, parceiro?! Vamos voltar pro nível 1 e tentar de novo!",
+                    "Eita nós! Deu ruim na matemática aí, hein! Presta atenção no denominador!",
+                    "Caramba! Até meu circuito fritou com esse valor erradão! Bora reiniciar o sistema!",
+                    "Uai... assim a lâmpada nem acende, chefe! Vamos rever esse MMC com calma!",
+                    "Ih rapaz! O tempo rodou e você boiou no cálculo! Bora tentar tudo do começo!"
+                ],
+                wins: [
+                    "Boa! Mandou bem demais, fera! Carga perfeitamente ajustada no gerador!",
+                    "Caraca, você é fera na matemática! A energia subiu sem nenhum curto-circuito!",
+                    "Show de bola! Carga encaixada no grau certo! Avançando para a próxima fase!",
+                    "Aê sim! Energia no padrão total! Mandou muito bem nessa fração!"
+                ]
+            },
+            silva: {
+                id: "silva",
+                name: "Professor Silva",
+                avatar: "👨‍🏫",
+                color: "border-emerald-400 bg-emerald-600",
+                intro: "Saudações! Sou o Professor Silva. Utilizaremos o raciocínio fracionário para manter o sistema estável.",
+                pitch: 0.9,
+                rate: 0.95,
+                greetings: [
+                    "Lembre-se: a fração representa uma parte do todo. Aplique a regra dividindo pelo denominador.",
+                    "Analise com calma a operação fracionária. O método passo a passo é infalível.",
+                    "Mantenha a concentração. A matemática do 7º ano é uma ferramenta poderosa de engenharia."
+                ],
+                taunts: [
+                    "Que pena, o valor calculado divergiu do esperado. Retornaremos ao Nível 1 para consolidar o aprendizado.",
+                    "Ocorreu um erro no cálculo da fração. Vamos recomeçar do Nível 1 com calma e foco.",
+                    "Tempo ou carga incorreta! Não se preocupe, a prática leva à perfeição. Voltando ao início!"
+                ],
+                wins: [
+                    "Magnífico! Raciocínio matemático impecável e carga perfeitamente ajustada!",
+                    "Excelente demonstração de cálculo fracionário! Parabéns pelo avanço!",
+                    "Exato! Resultado perfeito. Vamos prosseguir para a próxima etapa."
+                ]
+            }
+        };
+
+        let selectedChar = characters.maria;
+
+        function selectCharacter(charKey) {
+            if (!characters[charKey]) return;
+            selectedChar = characters[charKey];
+
+            // Atualizar botões de seleção
+            ['maria', 'zezinho', 'silva'].forEach(key => {
+                const btn = document.getElementById(`char-card-${key}`);
+                if (key === charKey) {
+                    btn.className = "char-select-btn p-2.5 rounded-xl border-2 border-cyan-400 bg-slate-900/90 text-center transition hover:scale-105 flex flex-col items-center shadow-lg shadow-cyan-500/20";
+                    btn.classList.remove('opacity-70');
+                } else {
+                    btn.className = "char-select-btn p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900/50 text-center transition hover:scale-105 flex flex-col items-center opacity-70";
+                }
+            });
+
+            // Atualizar preview no modal de abertura
+            document.getElementById('modal-char-avatar').innerText = selectedChar.avatar;
+            document.getElementById('modal-char-name').innerText = selectedChar.name + ":";
+            document.getElementById('modal-char-speech').innerText = `"${selectedChar.intro}"`;
+
+            speakText(selectedChar, selectedChar.intro);
+        }
+
+        function setCharacterDialogue(character, text) {
+            const avatarEl = document.getElementById('char-avatar');
+            const nameEl = document.getElementById('char-name');
+            const speechEl = document.getElementById('char-speech');
+
+            avatarEl.innerText = character.avatar;
+            avatarEl.className = `w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-2xl border-2 shadow-lg text-white ${character.color}`;
+            nameEl.innerText = character.name;
+            speechEl.innerText = `"${text}"`;
+
+            speakText(character, text);
+        }
+
+        // Função para os personagens falarem a fala completa com voz em Português do Brasil
+        function speakText(character, text) {
+            if (soundMuted || !('speechSynthesis' in window)) return;
+
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'pt-BR';
+
+            const voices = window.speechSynthesis.getVoices();
+            
+            const naturalPtBrVoice = voices.find(v => (v.lang === 'pt-BR' || v.lang === 'pt_BR') && 
+                (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Luciana') || v.name.includes('Felipe')))
+                || voices.find(v => v.lang === 'pt-BR' || v.lang === 'pt_BR')
+                || voices.find(v => v.lang.startsWith('pt'));
+
+            if (naturalPtBrVoice) {
+                utterance.voice = naturalPtBrVoice;
+            }
+
+            utterance.pitch = character.pitch || 1.0;
+            utterance.rate = character.rate || 1.0;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Garante o carregamento prévio das vozes no navegador
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+
+        // Efeitos de Som sem Música de Fundo
+        function initAudio() {
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+        }
+
+        function toggleSound() {
+            soundMuted = !soundMuted;
+            const soundIcon = document.getElementById('sound-icon');
+            if (soundMuted) {
+                soundIcon.className = "fa-solid fa-volume-xmark text-rose-400";
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            } else {
+                soundIcon.className = "fa-solid fa-volume-high text-cyan-400";
+            }
+        }
+
+        // Victory Chime (Som de Vitória ao passar de fase)
+        function playVictorySound() {
+            if (soundMuted) return;
+            initAudio();
+            const synth = new Tone.Synth({
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.5 }
+            }).toDestination();
+            synth.volume.value = 2;
+            
+            const now = Tone.now();
+            synth.triggerAttackRelease("C5", "8n", now);
+            synth.triggerAttackRelease("E5", "8n", now + 0.1);
+            synth.triggerAttackRelease("G5", "8n", now + 0.2);
+            synth.triggerAttackRelease("C6", "4n", now + 0.3);
+        }
+
+        // Comic Taunt Sound (Som de Deboche ao errar)
+        function playTauntSound() {
+            if (soundMuted) return;
+            initAudio();
+            const synth = new Tone.Synth({
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.05, decay: 0.3, sustain: 0.2, release: 0.4 }
+            }).toDestination();
+            synth.volume.value = 4;
+
+            const now = Tone.now();
+            synth.triggerAttackRelease("Eb3", "8n", now);
+            synth.triggerAttackRelease("D3", "8n", now + 0.15);
+            synth.triggerAttackRelease("C#3", "8n", now + 0.3);
+            synth.triggerAttackRelease("C3", "2n", now + 0.45);
+        }
+
+        // Update battery UI level when typing in charge input
+        document.addEventListener('DOMContentLoaded', () => {
+            const chargeInput = document.getElementById('charge-input');
+            if (chargeInput) {
+                chargeInput.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    updateBatteryUI(val);
+                });
+            }
+
+            // Fala de boas-vindas da Janela de Abertura com a fala em Português do Brasil
+            setTimeout(() => {
+                setCharacterDialogue(selectedChar, "Seja bem-vindo à Central! Resolva as frações e ajuste a carga certa do reator!");
+            }, 500);
+        });
+
+        // Fechar a Janela de Abertura e Iniciar
+        function closeOpeningModal() {
+            const modal = document.getElementById('opening-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            startGame();
+        }
+
+        function updateBatteryUI(currentVal) {
+            const batteryLevel = document.getElementById('battery-level');
+            const batteryText = document.getElementById('battery-percentage-text');
+            const pct = Math.min(Math.max((currentVal / totalCapacity) * 100, 0), 100);
+            
+            batteryLevel.style.height = `${pct}%`;
+            batteryText.innerText = `${currentVal} MW`;
+        }
+
+        // Start / Restart Game
+        function startGame() {
+            currentLevel = 1;
+            score = 0;
+            lives = 3;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            updateLivesUI();
+            document.getElementById('score-display').innerText = score;
+
+            loadLevel();
+        }
+
+        function updateLivesUI() {
+            const container = document.getElementById('lives-display');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < lives) {
+                    container.innerHTML += '<i class="fa-solid fa-heart text-rose-500"></i>';
+                } else {
+                    container.innerHTML += '<i class="fa-regular fa-heart text-slate-600"></i>';
+                }
+            }
+        }
+
+        // Level Data Generator guaranteed to produce WHOLE NUMBERS (Integers)
+        function generateLevelData(lvl) {
+            let capacity, problemHTML, answer, hintText;
+
+            if (lvl <= 5) {
+                // Levels 1-5: Parte de um todo (Fração simples)
+                const denominators = [2, 3, 4, 5, 10];
+                const den = denominators[(lvl - 1) % denominators.length];
+                const num = Math.floor(Math.random() * (den - 1)) + 1;
+                const multiplier = Math.floor(Math.random() * 5 + 2) * den;
+                capacity = multiplier; // Capacity is multiple of den -> Answer is always integer!
+                answer = (num / den) * capacity;
+                problemHTML = `<div class="fraction"><span>${num}</span><span>${den}</span></div> <span class="text-xl text-slate-400">de</span> <span>${capacity} MW</span>`;
+                hintText = `Dica (7º Ano): Divida ${capacity} por ${den} e multiplique o resultado por ${num}.`;
+
+            } else if (lvl <= 10) {
+                // Levels 6-10: Soma/Subtração com mesmo denominador
+                const den = [3, 4, 5, 6, 8][(lvl - 6) % 5];
+                const n1 = Math.floor(Math.random() * 3) + 1;
+                const n2 = Math.floor(Math.random() * 3) + 1;
+                const isAdd = lvl % 2 === 0;
+                const sumNum = isAdd ? n1 + n2 : Math.max(n1, n2) + 1;
+                const subNum = isAdd ? 0 : Math.min(n1, n2);
+                const finalNum = isAdd ? sumNum : sumNum - subNum;
+
+                const multiplier = Math.floor(Math.random() * 4 + 2) * den;
+                capacity = multiplier;
+                answer = (finalNum / den) * capacity;
+
+                const op = isAdd ? '+' : '-';
+                const num2 = isAdd ? n2 : subNum;
+                problemHTML = `(<div class="fraction"><span>${isAdd ? n1 : sumNum}</span><span>${den}</span></div> ${op} <div class="fraction"><span>${num2}</span><span>${den}</span></div>) <span class="text-xl text-slate-400">de</span> <span>${capacity} MW</span>`;
+                hintText = `Dica (7º Ano): Com mesmo denominador, conserve o fundo (${den}) e ${isAdd ? 'somos' : 'subtraia'} os numeradores!`;
+
+            } else if (lvl <= 15) {
+                // Levels 11-15: Denominadores Diferentes (MMC)
+                const d1 = 2;
+                const d2 = 3; // MMC(2,3) = 6
+                const commonDen = 6;
+                const n1 = 1;
+                const n2 = 1;
+                const isAdd = lvl % 2 !== 0;
+                
+                // 1/2 + 1/3 = 5/6 ; 1/2 - 1/3 = 1/6
+                const finalNum = isAdd ? 5 : 1;
+                const multiplier = Math.floor(Math.random() * 5 + 3) * commonDen;
+                capacity = multiplier;
+                answer = (finalNum / commonDen) * capacity;
+
+                const op = isAdd ? '+' : '-';
+                problemHTML = `(<div class="fraction"><span>1</span><span>2</span></div> ${op} <div class="fraction"><span>1</span><span>3</span></div>) <span class="text-xl text-slate-400">de</span> <span>${capacity} MW</span>`;
+                hintText = `Dica (7º Ano): Ache frações equivalentes com MMC (6) antes de ${isAdd ? 'somar' : 'subtrair'}!`;
+
+            } else {
+                // Levels 16-20: Multiplicação de frações / números mistos
+                const den1 = 2;
+                const den2 = 2;
+                const commonDen = 4;
+                const n1 = 3; // 3/2
+                const n2 = 1; // 1/2 -> 3/4
+                const multiplier = Math.floor(Math.random() * 5 + 4) * commonDen;
+                capacity = multiplier;
+                answer = (3 / 4) * capacity;
+
+                problemHTML = `(<div class="fraction"><span>3</span><span>2</span></div> &times; <div class="fraction"><span>1</span><span>2</span></div>) <span class="text-xl text-slate-400">de</span> <span>${capacity} MW</span>`;
+                hintText = `Dica (7º Ano): Na multiplicação, multiplique de cima com de cima (numerador) e de baixo com de baixo (denominador)!`;
+            }
+
+            return { capacity, problemHTML, answer: Math.round(answer), hintText };
+        }
+
+        // Load Level
+        function loadLevel() {
+            clearInterval(timer);
+            const levelData = generateLevelData(currentLevel);
+
+            totalCapacity = levelData.capacity;
+            targetValue = levelData.answer;
+
+            document.getElementById('level-display').innerText = currentLevel;
+            document.getElementById('total-capacity').innerText = `${totalCapacity} MW`;
+            document.getElementById('math-problem').innerHTML = levelData.problemHTML;
+            document.getElementById('problem-hint').innerText = levelData.hintText;
+
+            const chargeInput = document.getElementById('charge-input');
+            chargeInput.value = '';
+            chargeInput.max = totalCapacity;
+            updateBatteryUI(0);
+
+            document.getElementById('feedback-message').className = "w-full p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300 text-sm font-medium min-h-[50px] flex items-center justify-center text-center";
+            document.getElementById('feedback-message').innerText = "Aguardando entrada do operador...";
+
+            // Fala do personagem selecionado
+            const randomGreeting = selectedChar.greetings[Math.floor(Math.random() * selectedChar.greetings.length)];
+            setCharacterDialogue(selectedChar, randomGreeting);
+
+            startTimer();
+        }
+
+        // 45-Second Timer
+        function startTimer() {
+            timeLeft = 45;
+            document.getElementById('time-display').innerText = timeLeft;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-display').innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleFailure("Tempo esgotado! A bateria descarregou totalmente.");
+                }
+            }, 1000);
+        }
+
+        // Submit Charge Answer
+        function submitCharge() {
+            const inputVal = parseInt(document.getElementById('charge-input').value);
+
+            if (isNaN(inputVal)) {
+                document.getElementById('feedback-message').innerText = "Por favor, insira um valor de carga válido!";
+                document.getElementById('feedback-message').className = "w-full p-3 rounded-xl bg-amber-950/60 border border-amber-600/50 text-amber-300 text-sm font-medium min-h-[50px] flex items-center justify-center text-center";
+                return;
+            }
+
+            clearInterval(timer);
+
+            if (inputVal === targetValue) {
+                // Correct Answer
+                score += 100 + (timeLeft * 2);
+                document.getElementById('score-display').innerText = score;
+
+                playVictorySound();
+                const winSpeech = selectedChar.wins[Math.floor(Math.random() * selectedChar.wins.length)];
+                setCharacterDialogue(selectedChar, winSpeech);
+
+                document.getElementById('feedback-message').className = "w-full p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-sm font-medium min-h-[50px] flex items-center justify-center text-center";
+                document.getElementById('feedback-message').innerText = `EXCELENTE! Carga de ${targetValue} MW configurada corretamente!`;
+
+                setTimeout(() => {
+                    if (currentLevel >= 20) {
+                        endGame(true);
+                    } else {
+                        currentLevel++;
+                        loadLevel();
+                    }
+                }, 2200);
+
+            } else {
+                // Wrong Answer
+                handleFailure(`Carga Incorreta! Você inseriu ${inputVal} MW, mas o correto era ${targetValue} MW.`);
+            }
+        }
+
+        // Handle Failure (Returns to Level 1)
+        function handleFailure(message) {
+            lives--;
+            updateLivesUI();
+            playTauntSound();
+
+            const tauntSpeech = selectedChar.taunts[Math.floor(Math.random() * selectedChar.taunts.length)];
+            setCharacterDialogue(selectedChar, tauntSpeech);
+
+            document.getElementById('feedback-message').className = "w-full p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-300 text-sm font-medium min-h-[50px] flex items-center justify-center text-center";
+            document.getElementById('feedback-message').innerText = `${message} Voltando ao Nível 1...`;
+
+            setTimeout(() => {
+                if (lives <= 0) {
+                    endGame(false);
+                } else {
+                    currentLevel = 1; // Reset to level 1 on error
+                    loadLevel();
+                }
+            }, 2500);
+        }
+
+        // End Game Screen
+        function endGame(isWin) {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            const endIcon = document.getElementById('end-icon');
+            const endTitle = document.getElementById('end-title');
+            const endSubtitle = document.getElementById('end-subtitle');
+
+            document.getElementById('final-level').innerText = `${currentLevel} / 20`;
+            document.getElementById('final-score').innerText = score;
+
+            if (isWin) {
+                endIcon.className = "w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl border border-emerald-500/40";
+                endIcon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                endTitle.innerText = "MISSÃO CUMPRIDA!";
+                endSubtitle.innerText = "Você dominou todas as frações e abasteceu com perfeição a rede elétrica!";
+                setCharacterDialogue(selectedChar, "Fantástico! Você completou os 20 níveis e dominou a matemática das frações!");
+            } else {
+                endIcon.className = "w-20 h-20 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl border border-rose-500/40";
+                endIcon.innerHTML = '<i class="fa-solid fa-battery-empty"></i>';
+                endTitle.innerText = "SISTEMA DESLIGADO";
+                endSubtitle.innerText = "Suas vidas acabaram. Revise os cálculos fracionários e tente novamente!";
+                setCharacterDialogue(selectedChar, "As vidas acabaram. Vamos revisar o conteúdo e recomeçar do Nível 1!");
+            }
+        }
+    </script>
+</body>
+</html>
