@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CONEXÃO RELÂMPAGO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070913;
+            --panel-bg: rgba(15, 21, 43, 0.85);
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-amber: #ffbe0b;
+            --neon-green: #00ff88;
+            --neon-purple: #9d4edd;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.12) 0%, transparent 55%),
+                radial-gradient(circle at 85% 90%, rgba(157, 78, 221, 0.15) 0%, transparent 50%),
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .font-display {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Efeitos Neon */
+        .neon-text-cyan {
+            color: #fff;
+            text-shadow: 0 0 8px var(--neon-cyan), 0 0 20px rgba(0, 243, 255, 0.6);
+        }
+
+        .neon-border {
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.12), inset 0 0 12px rgba(0, 243, 255, 0.06);
+        }
+
+        /* Peças do Tabuleiro */
+        .tile-cell {
+            position: relative;
+            background: rgba(16, 23, 46, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .tile-cell:active:not(.locked):not(.block) {
+            transform: scale(0.93);
+        }
+
+        .tile-cell.powered {
+            border-color: rgba(0, 243, 255, 0.55);
+            background: rgba(0, 243, 255, 0.08);
+            box-shadow: inset 0 0 12px rgba(0, 243, 255, 0.22);
+        }
+
+        .tile-cell.locked {
+            cursor: not-allowed;
+            background: rgba(30, 35, 58, 0.95);
+            border-color: rgba(255, 190, 11, 0.35);
+        }
+
+        .tile-cell.block {
+            cursor: default;
+            background: rgba(10, 13, 26, 0.95);
+            border-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .tile-cell.hint-highlight {
+            animation: hintPulse 0.5s ease-in-out infinite alternate;
+            border-color: var(--neon-green) !important;
+            z-index: 10;
+        }
+
+        @keyframes hintPulse {
+            from {
+                box-shadow: 0 0 10px var(--neon-green), inset 0 0 10px var(--neon-green);
+                transform: scale(0.98);
+            }
+            to {
+                box-shadow: 0 0 24px var(--neon-green), inset 0 0 18px var(--neon-green);
+                transform: scale(1.04);
+            }
+        }
+
+        .tile-rotator {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Trilhas SVG */
+        .pipe-base {
+            stroke: #263156;
+            stroke-width: 16;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            transition: stroke 0.25s ease;
+        }
+
+        .pipe-energy {
+            stroke: var(--neon-cyan);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            opacity: 0;
+            filter: drop-shadow(0 0 6px var(--neon-cyan));
+            transition: opacity 0.2s ease;
+        }
+
+        .tile-cell.powered .pipe-base {
+            stroke: #0e4d64;
+        }
+
+        .tile-cell.powered .pipe-energy {
+            opacity: 1;
+        }
+
+        /* Animação de Urgência no Timer */
+        .timer-urgent {
+            animation: urgentBlink 0.45s infinite alternate;
+        }
+
+        @keyframes urgentBlink {
+            from { box-shadow: 0 0 6px #ff0055; }
+            to { box-shadow: 0 0 18px #ff0055, 0 0 28px #ff0055; }
+        }
+
+        /* Botões Cyber */
+        .btn-cyber {
+            background: linear-gradient(135deg, #00f3ff 0%, #0077ff 100%);
+            color: #050814;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            box-shadow: 0 0 18px rgba(0, 243, 255, 0.45);
+            transition: all 0.18s ease;
+        }
+
+        .btn-cyber:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 26px rgba(0, 243, 255, 0.75);
+        }
+
+        .btn-cyber:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-cyber:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(0, 243, 255, 0.35);
+            color: #e0f7ff;
+            transition: all 0.18s ease;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(0, 243, 255, 0.16);
+            border-color: var(--neon-cyan);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* Pulso dos Núcleos */
+        @keyframes corePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+
+        .core-active {
+            animation: corePulse 1.2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="p-3 sm:p-4">
+
+    <!-- CABEÇALHO & STATUS SUPERIOR -->
+    <header class="w-full max-w-lg flex flex-col gap-2 z-10">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_12px_rgba(0,243,255,0.4)]">
+                    <svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-display font-black text-base sm:text-xl tracking-wider neon-text-cyan leading-none">
+                        CONEXÃO RELÂMPAGO
+                    </h1>
+                    <p id="level-subtitle" class="text-xs text-cyan-300/80 font-semibold tracking-wide mt-0.5">
+                        NÍVEL 1 • REDE BÁSICA
+                    </p>
+                </div>
+            </div>
+
+            <!-- Painel de Pontos e Som -->
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-900/90 border border-cyan-500/30 rounded-xl px-3 py-1 text-right">
+                    <span class="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">Pontos</span>
+                    <span id="score-display" class="font-display font-bold text-sm sm:text-base text-amber-400">0</span>
+                </div>
+                <button id="mute-btn" aria-label="Alternar som" class="btn-secondary p-2.5 rounded-xl flex items-center justify-center">
+                    <!-- Ícone de Som Ativo -->
+                    <svg id="icon-sound-on" class="w-5 h-5 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+                    </svg>
+                    <!-- Ícone de Mudo -->
+                    <svg id="icon-sound-off" class="w-5 h-5 text-rose-400 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Barra de Tempo Visual -->
+        <div class="w-full bg-slate-900/90 border border-slate-700/80 rounded-full h-4 p-0.5 relative overflow-hidden">
+            <div id="timer-bar" class="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-100 ease-linear" style="width: 100%;"></div>
+            <span id="timer-text" class="absolute inset-0 flex items-center justify-center font-display text-[11px] font-bold tracking-widest text-white drop-shadow">
+                45.0s
+            </span>
+        </div>
+    </header>
+
+    <!-- ÁREA CENTRAL DO TABULEIRO -->
+    <main class="flex-1 w-full max-w-lg flex flex-col items-center justify-center my-1 min-h-0">
+        <!-- Indicador de Núcleos e Cliques -->
+        <div class="w-full flex items-center justify-between px-1 mb-2 text-xs sm:text-sm font-semibold text-slate-300">
+            <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f3ff]"></span>
+                <span>Núcleos: <strong id="cores-status" class="text-cyan-300 font-display">0/1</strong></span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span>Cliques: <strong id="clicks-count" class="text-white font-display">0</strong></span>
+                <span class="text-slate-500">|</span>
+                <span>Fase: <strong id="level-badge" class="text-fuchsia-400 font-display">1/5</strong></span>
+            </div>
+        </div>
+
+        <!-- Container Responsivo Quadrado do Grid -->
+        <div id="board-wrapper" class="w-full flex items-center justify-center flex-1 min-h-0">
+            <div id="game-board" class="neon-border bg-slate-950/80 backdrop-blur-md p-2 sm:p-3 rounded-2xl grid gap-1.5 sm:gap-2 aspect-square shadow-2xl">
+                <!-- Peças geradas via JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- CONTROLES INFERIORES -->
+    <footer class="w-full max-w-lg flex items-center justify-between gap-2 z-10 pb-1">
+        <button id="restart-btn" class="btn-secondary flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M5.64 18.36A9 9 0 105.64 5.64L4 7"/>
+            </svg>
+            Reiniciar
+        </button>
+
+        <button id="hint-btn" class="btn-secondary flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border-emerald-400/40 text-emerald-300">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            <span>Dica Rápida (<span id="hint-count">1</span>)</span>
+        </button>
+    </footer>
+
+    <!-- OVERLAY / MODAL DE INÍCIO, VITÓRIA E DERROTA -->
+    <div id="modal-overlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-opacity duration-200">
+        <div class="neon-border bg-slate-900/95 max-w-sm w-full rounded-3xl p-6 text-center shadow-[0_0_40px_rgba(0,243,255,0.2)] flex flex-col items-center gap-4">
+            
+            <!-- Ícone Dinâmico do Modal -->
+            <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_20px_rgba(0,243,255,0.4)]">
+                <svg class="w-9 h-9 text-cyan-300" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+                </svg>
+            </div>
+
+            <div>
+                <h2 id="modal-title" class="font-display font-black text-2xl tracking-wider neon-text-cyan">
+                    CONEXÃO RELÂMPAGO
+                </h2>
+                <p id="modal-desc" class="text-slate-300 text-sm sm:text-base mt-2 font-medium leading-snug">
+                    Toque nas peças para girar os circuitos e conectar a Fonte de Energia ao Núcleo antes que o tempo acabe!
+                </p>
+            </div>
+
+            <!-- Estatísticas da Fase (Visível na vitória/derrota) -->
+            <div id="modal-stats" class="hidden w-full grid grid-cols-3 gap-2 bg-slate-950/80 border border-slate-800 rounded-2xl p-3">
+                <div>
+                    <span class="block text-[10px] uppercase text-slate-400 font-bold">Tempo Gasto</span>
+                    <span id="stat-time" class="font-display font-bold text-cyan-300 text-sm">12.4s</span>
+                </div>
+                <div class="border-x border-slate-800">
+                    <span class="block text-[10px] uppercase text-slate-400 font-bold">Cliques</span>
+                    <span id="stat-clicks" class="font-display font-bold text-fuchsia-400 text-sm">14</span>
+                </div>
+                <div>
+                    <span class="block text-[10px] uppercase text-slate-400 font-bold">Bônus Fase</span>
+                    <span id="stat-points" class="font-display font-bold text-amber-400 text-sm">+450</span>
+                </div>
+            </div>
+
+            <button id="modal-action-btn" class="btn-cyber w-full py-3.5 px-6 rounded-2xl text-base uppercase tracking-wider mt-1">
+                INICIAR MISSÃO
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * CONEXÃO RELÂMPAGO - Lógica Principal & Sintetizador Web Audio
+         * Direções codificadas em bits:
+         * 1 = CIMA (North)
+         * 2 = DIREITA (East)
+         * 4 = BAIXO (South)
+         * 8 = ESQUERDA (West)
+         */
+        const DIR = { N: 1, E: 2, S: 4, W: 8 };
+        const OPPOSITE = { 1: 4, 2: 8, 4: 1, 8: 2 };
+        const DELTA = {
+            1: { r: -1, c: 0 },
+            2: { r: 0, c: 1 },
+            4: { r: 1, c: 0 },
+            8: { r: 0, c: -1 }
+        };
+
+        // Configuração das 5 Fases Progressivas
+        const LEVELS = [
+            { level: 1, size: 4, time: 45, cores: 1, lockedCount: 0, blocksCount: 1, title: "REDE BÁSICA" },
+            { level: 2, size: 5, time: 40, cores: 1, lockedCount: 0, blocksCount: 2, title: "BIFURCAÇÃO NEON" },
+            { level: 3, size: 5, time: 35, cores: 1, lockedCount: 3, blocksCount: 2, title: "TRAVA DE SEGURANÇA" },
+            { level: 4, size: 6, time: 35, cores: 2, lockedCount: 2, blocksCount: 3, title: "NÚCLEOS GÊMEOS" },
+            { level: 5, size: 6, time: 30, cores: 2, lockedCount: 4, blocksCount: 3, title: "SOBRECARGA FINAL" }
+        ];
+
+        // Estado Global do Jogo
+        let state = {
+            currentLevelIdx: 0,
+            score: 0,
+            grid: [],
+            size: 4,
+            timeLeft: 45,
+            maxTime: 45,
+            timerInterval: null,
+            lastTickTime: 0,
+            isPlaying: false,
+            clicks: 0,
+            hintsLeft: 1,
+            muted: false,
+            lastUrgentSecond: -1
+        };
+
+        // --- SISTEMA DE ÁUDIO (WEB AUDIO API) ---
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playRotate() {
+                if (state.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(640, now + 0.08);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            }
+
+            playLocked() {
+                if (state.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.linearRampToValueAtTime(95, now + 0.12);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.13);
+            }
+
+            playEnergize() {
+                if (state.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(980, now + 0.14);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+
+            playUrgentTick() {
+                if (state.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(880, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.07);
+            }
+
+            playWin() {
+                if (state.muted) return;
+                this.init();
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    const now = this.ctx.currentTime + i * 0.09;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                });
+            }
+
+            playLose() {
+                if (state.muted) return;
+                this.init();
+                const notes = [300, 240, 180];
+                notes.forEach((freq, i) => {
+                    const now = this.ctx.currentTime + i * 0.14;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                });
+            }
+        }
+
+        const sfx = new SoundFX();
+
+        // --- FUNÇÕES DE MANIPULAÇÃO DE BITS / ROTAÇÃO ---
+        function rotateMask(mask, steps = 1) {
+            let res = mask;
+            const s = ((steps % 4) + 4) % 4;
+            for (let i = 0; i < s; i++) {
+                let next = 0;
+                if (res & DIR.N) next |= DIR.E;
+                if (res & DIR.E) next |= DIR.S;
+                if (res & DIR.S) next |= DIR.W;
+                if (res & DIR.W) next |= DIR.N;
+                res = next;
+            }
+            return res;
+        }
+
+        function countBits(mask) {
+            let c = 0;
+            if (mask & 1) c++;
+            if (mask & 2) c++;
+            if (mask & 4) c++;
+            if (mask & 8) c++;
+            return c;
+        }
+
+        // --- GERADOR DE TABULEIRO VÁLIDO GARANTIDO ---
+        function generateValidLevel(config) {
+            const N = config.size;
+            let attempts = 0;
+
+            while (attempts < 100) {
+                attempts++;
+                // Inicializa matriz vazia
+                const board = Array.from({ length: N }, (_, r) =>
+                    Array.from({ length: N }, (_, c) => ({
+                        r, c,
+                        role: 'pipe', // 'source', 'core', 'pipe', 'block'
+                        solvedMask: 0,
+                        currentMask: 0,
+                        visualAngle: 0,
+                        locked: false,
+                        powered: false
+                    }))
+                );
+
+                // 1. Posicionar Bloqueios em posições internas que não isolem cantos
+                let placedBlocks = 0;
+                let blockTries = 0;
+                while (placedBlocks < config.blocksCount && blockTries < 50) {
+                    blockTries++;
+                    const br = Math.floor(Math.random() * N);
+                    const bc = Math.floor(Math.random() * N);
+                    // Evita borda esquerda/direita extrema para facilitar fonte/núcleos
+                    if (bc === 0 || bc === N - 1) continue;
+                    if (board[br][bc].role === 'pipe') {
+                        board[br][bc].role = 'block';
+                        placedBlocks++;
+                    }
+                }
+
+                // 2. Escolher Fonte (coluna 0) e Núcleos (coluna N-1)
+                const sourceRow = Math.floor(Math.random() * N);
+                board[sourceRow][0].role = 'source';
+
+                const corePositions = [];
+                const availableCoreRows = Array.from({ length: N }, (_, i) => i).sort(() => Math.random() - 0.5);
+                for (let i = 0; i < config.cores; i++) {
+                    const cr = availableCoreRows[i];
+                    board[cr][N - 1].role = 'core';
+                    corePositions.push({ r: cr, c: N - 1 });
+                }
+
+                // 3. Traçar caminhos garantidos (Randomized BFS/DFS) da Fonte até cada Núcleo
+                let allPathsFound = true;
+                for (const target of corePositions) {
+                    const path = findRandomPath(board, { r: sourceRow, c: 0 }, target, N);
+                    if (!path) {
+                        allPathsFound = false;
+                        break;
+                    }
+                    // Conecta as arestas ao longo do caminho
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const curr = path[i];
+                        const next = path[i + 1];
+                        const dir = getDirectionBetween(curr, next);
+                        board[curr.r][curr.c].solvedMask |= dir;
+                        board[next.r][next.c].solvedMask |= OPPOSITE[dir];
+                    }
+                }
+
+                if (!allPathsFound) continue;
+
+                // 4. Preencher peças restantes que não fazem parte da solução principal com distratores realistas
+                const pipeTemplates = [
+                    DIR.N | DIR.S,           // Reta
+                    DIR.N | DIR.E,           // Curva L
+                    DIR.N | DIR.E | DIR.S    // Cruzamento T
+                ];
+
+                for (let r = 0; r < N; r++) {
+                    for (let c = 0; c < N; c++) {
+                        const cell = board[r][c];
+                        if (cell.role === 'block') continue;
+
+                        if (cell.solvedMask === 0) {
+                            // Peça distratora
+                            const tpl = pipeTemplates[Math.floor(Math.random() * pipeTemplates.length)];
+                            const rot = Math.floor(Math.random() * 4);
+                            cell.solvedMask = rotateMask(tpl, rot);
+                        }
+                    }
+                }
+
+                // 5. Definir peças travadas (apenas peças de circuito que já estão na posição correta)
+                const lockableCandidates = [];
+                for (let r = 0; r < N; r++) {
+                    for (let c = 0; c < N; c++) {
+                        const cell = board[r][c];
+                        if (cell.role === 'pipe' && countBits(cell.solvedMask) >= 2) {
+                            lockableCandidates.push(cell);
+                        }
+                    }
+                }
+                lockableCandidates.sort(() => Math.random() - 0.5);
+                for (let i = 0; i < Math.min(config.lockedCount, lockableCandidates.length); i++) {
+                    lockableCandidates[i].locked = true;
+                }
+
+                // 6. Embaralhar rotações iniciais das peças destravadas
+                let scrambledCount = 0;
+                for (let r = 0; r < N; r++) {
+                    for (let c = 0; c < N; c++) {
+                        const cell = board[r][c];
+                        if (cell.role === 'block') continue;
+
+                        if (cell.locked) {
+                            cell.currentMask = cell.solvedMask;
+                            cell.visualAngle = 0;
+                        } else {
+                            // Garante que a maioria comece girada fora da solução
+                            const isStraight = (cell.solvedMask === (DIR.N | DIR.S) || cell.solvedMask === (DIR.E | DIR.W));
+                            const maxRot = isStraight ? 2 : 4;
+                            let randSteps = Math.floor(Math.random() * maxRot);
+                            if (randSteps === 0 && Math.random() < 0.78) {
+                                randSteps = 1;
+                            }
+                            cell.currentMask = rotateMask(cell.solvedMask, randSteps);
+                            cell.visualAngle = randSteps * 90;
+                            if (cell.currentMask !== cell.solvedMask) scrambledCount++;
+                        }
+                    }
+                }
+
+                // Garante que o puzzle não comece já resolvido
+                if (scrambledCount >= 3) {
+                    return board;
+                }
+            }
+            return null;
+        }
+
+        function getDirectionBetween(a, b) {
+            if (b.r < a.r) return DIR.N;
+            if (b.r > a.r) return DIR.S;
+            if (b.c > a.c) return DIR.E;
+            return DIR.W;
+        }
+
+        function findRandomPath(board, start, end, N) {
+            const visited = Array.from({ length: N }, () => Array(N).fill(false));
+            const path = [];
+
+            function dfs(r, c) {
+                if (r === end.r && c === end.c) {
+                    path.push({ r, c });
+                    return true;
+                }
+                visited[r][c] = true;
+                path.push({ r, c });
+
+                // Ordena vizinhos com leve preferência para avançar + aleatoriedade para curvas orgânicas
+                const dirs = [DIR.N, DIR.E, DIR.S, DIR.W].sort(() => Math.random() - 0.5);
+                for (const d of dirs) {
+                    const nr = r + DELTA[d].r;
+                    const nc = c + DELTA[d].c;
+                    if (nr >= 0 && nr < N && nc >= 0 && nc < N && !visited[nr][nc]) {
+                        const targetCell = board[nr][nc];
+                        if (targetCell.role === 'block') continue;
+                        // Evita passar por outro núcleo intermediário se não for o destino
+                        if (targetCell.role === 'core' && (nr !== end.r || nc !== end.c)) continue;
+                        if (dfs(nr, nc)) return true;
+                    }
+                }
+                path.pop();
+                return false;
+            }
+
+            return dfs(start.r, start.c) ? path : null;
+        }
+
+        // --- PROPAGAÇÃO DE ENERGIA EM TEMPO REAL ---
+        function evaluatePower() {
+            const N = state.size;
+            let prevPoweredCount = 0;
+
+            for (let r = 0; r < N; r++) {
+                for (let c = 0; c < N; c++) {
+                    if (state.grid[r][c].powered) prevPoweredCount++;
+                    state.grid[r][c].powered = false;
+                }
+            }
+
+            const queue = [];
+            // Encontra a Fonte
+            for (let r = 0; r < N; r++) {
+                for (let c = 0; c < N; c++) {
+                    if (state.grid[r][c].role === 'source') {
+                        state.grid[r][c].powered = true;
+                        queue.push(state.grid[r][c]);
+                    }
+                }
+            }
+
+            while (queue.length > 0) {
+                const curr = queue.shift();
+                for (const d of [DIR.N, DIR.E, DIR.S, DIR.W]) {
+                    if (curr.currentMask & d) {
+                        const nr = curr.r + DELTA[d].r;
+                        const nc = curr.c + DELTA[d].c;
+                        if (nr >= 0 && nr < N && nc >= 0 && nc < N) {
+                            const neighbor = state.grid[nr][nc];
+                            if (!neighbor.powered && neighbor.role !== 'block' && (neighbor.currentMask & OPPOSITE[d])) {
+                                neighbor.powered = true;
+                                queue.push(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Atualiza classes visuais e conta núcleos ativos
+            let totalCores = 0;
+            let activeCores = 0;
+            let newPoweredCount = 0;
+
+            for (let r = 0; r < N; r++) {
+                for (let c = 0; c < N; c++) {
+                    const cell = state.grid[r][c];
+                    const el = document.getElementById(`cell-${r}-${c}`);
+                    if (el) {
+                        el.classList.toggle('powered', cell.powered);
+                    }
+                    if (cell.powered) newPoweredCount++;
+                    if (cell.role === 'core') {
+                        totalCores++;
+                        if (cell.powered) activeCores++;
+                    }
+                }
+            }
+
+            document.getElementById('cores-status').textContent = `${activeCores}/${totalCores}`;
+
+            if (newPoweredCount > prevPoweredCount && state.isPlaying) {
+                sfx.playEnergize();
+            }
+
+            // Verifica Vitória
+            if (state.isPlaying && totalCores > 0 && activeCores === totalCores) {
+                handleLevelComplete();
+            }
+        }
+
+        // --- RENDERIZAÇÃO DO TABULEIRO E SVG DAS PEÇAS ---
+        function buildPipeSVG(cell) {
+            const mask = cell.solvedMask;
+            let paths = '';
+
+            // Desenha segmentos do centro (50,50) até cada saída ativa na solvedMask
+            if (mask & DIR.N) paths += `<line x1="50" y1="50" x2="50" y2="0" />`;
+            if (mask & DIR.E) paths += `<line x1="50" y1="50" x2="100" y2="50" />`;
+            if (mask & DIR.S) paths += `<line x1="50" y1="50" x2="50" y2="100" />`;
+            if (mask & DIR.W) paths += `<line x1="50" y1="50" x2="0" y2="50" />`;
+
+            // Nó central para acabamentos limpos em curvas e T
+            const centerDot = countBits(mask) >= 2 ? `<circle cx="50" cy="50" r="8" class="pipe-base" style="stroke:none; fill:#263156;" />` : '';
+
+            let badge = '';
+            if (cell.role === 'source') {
+                badge = `
+                    <g class="pointer-events-none">
+                        <circle cx="50" cy="50" r="24" fill="#06182c" stroke="#00f3ff" stroke-width="4" />
+                        <path d="M52 34L39 52h10l-2 14 14-18H51l1-14z" fill="#00f3ff" />
+                    </g>
+                `;
+            } else if (cell.role === 'core') {
+                badge = `
+                    <g class="pointer-events-none">
+                        <circle cx="50" cy="50" r="23" fill="#1b0b2e" stroke="#ff007f" stroke-width="4" />
+                        <circle cx="50" cy="50" r="10" fill="#ff007f" />
+                    </g>
+                `;
+            }
+
+            return `
+                <svg viewBox="0 0 100 100" class="w-full h-full overflow-visible">
+                    <g class="pipe-base">${paths}</g>
+                    ${centerDot}
+                    <g class="pipe-energy">${paths}</g>
+                    ${badge}
+                </svg>
+            `;
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('game-board');
+            const N = state.size;
+            boardEl.innerHTML = '';
+            boardEl.style.gridTemplateColumns = `repeat(${N}, minmax(0, 1fr))`;
+            boardEl.style.gridTemplateRows = `repeat(${N}, minmax(0, 1fr))`;
+
+            resizeBoardContainer();
+
+            for (let r = 0; r < N; r++) {
+                for (let c = 0; c < N; c++) {
+                    const cell = state.grid[r][c];
+                    const tile = document.createElement('div');
+                    tile.id = `cell-${r}-${c}`;
+                    tile.className = 'tile-cell';
+
+                    if (cell.role === 'block') {
+                        tile.classList.add('block');
+                        tile.innerHTML = `
+                            <svg viewBox="0 0 100 100" class="w-3/5 h-3/5 opacity-30 text-slate-500">
+                                <path d="M25 25L75 75M75 25L25 75" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+                            </svg>
+                        `;
+                    } else {
+                        if (cell.locked) tile.classList.add('locked');
+
+                        const rotator = document.createElement('div');
+                        rotator.id = `rot-${r}-${c}`;
+                        rotator.className = 'tile-rotator';
+                        rotator.style.transform = `rotate(${cell.visualAngle}deg)`;
+                        rotator.innerHTML = buildPipeSVG(cell);
+                        tile.appendChild(rotator);
+
+                        // Indicador visual de peça travada
+                        if (cell.locked) {
+                            const lockIcon = document.createElement('div');
+                            lockIcon.className = 'absolute top-1 right-1 w-3.5 h-3.5 text-amber-400 pointer-events-none';
+                            lockIcon.innerHTML = `
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm-3 5a3 3 0 116 0v3H9V7z"/>
+                                </svg>
+                            `;
+                            tile.appendChild(lockIcon);
+                        }
+
+                        tile.addEventListener('click', () => handleTileClick(r, c));
+                    }
+
+                    boardEl.appendChild(tile);
+                }
+            }
+        }
+
+        function resizeBoardContainer() {
+            const wrapper = document.getElementById('board-wrapper');
+            const boardEl = document.getElementById('game-board');
+            if (!wrapper || !boardEl) return;
+            const rect = wrapper.getBoundingClientRect();
+            const maxSide = Math.min(rect.width, rect.height, 500);
+            if (maxSide > 0) {
+                boardEl.style.width = `${Math.floor(maxSide)}px`;
+                boardEl.style.height = `${Math.floor(maxSide)}px`;
+            }
+        }
+
+        window.addEventListener('resize', resizeBoardContainer);
+
+        // --- INTERAÇÃO DO JOGADOR ---
+        function handleTileClick(r, c) {
+            if (!state.isPlaying) return;
+            const cell = state.grid[r][c];
+            if (cell.role === 'block') return;
+
+            if (cell.locked) {
+                sfx.playLocked();
+                const el = document.getElementById(`cell-${r}-${c}`);
+                el.animate([
+                    { transform: 'translateX(-3px)' },
+                    { transform: 'translateX(3px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 150 });
+                return;
+            }
+
+            // Gira 90 graus no sentido horário
+            cell.visualAngle += 90;
+            cell.currentMask = rotateMask(cell.currentMask, 1);
+            state.clicks++;
+            document.getElementById('clicks-count').textContent = state.clicks;
+
+            const rotator = document.getElementById(`rot-${r}-${c}`);
+            if (rotator) {
+                rotator.style.transform = `rotate(${cell.visualAngle}deg)`;
+            }
+
+            sfx.playRotate();
+            evaluatePower();
+        }
+
+        // --- DICA RÁPIDA ---
+        function useHint() {
+            if (!state.isPlaying || state.hintsLeft <= 0) return;
+
+            // Procura uma peça não-travada que ainda não esteja na orientação da solução
+            const wrongCells = [];
+            for (let r = 0; r < state.size; r++) {
+                for (let c = 0; c < state.size; c++) {
+                    const cell = state.grid[r][c];
+                    if (cell.role !== 'block' && !cell.locked && cell.currentMask !== cell.solvedMask) {
+                        wrongCells.push(cell);
+                    }
+                }
+            }
+
+            if (wrongCells.length === 0) return;
+
+            state.hintsLeft--;
+            document.getElementById('hint-count').textContent = state.hintsLeft;
+            document.getElementById('hint-btn').disabled = true;
+
+            // Prioriza peças próximas da fonte ou núcleos
+            const chosen = wrongCells[Math.floor(Math.random() * wrongCells.length)];
+            const el = document.getElementById(`cell-${chosen.r}-${chosen.c}`);
+            if (el) {
+                el.classList.add('hint-highlight');
+                sfx.playEnergize();
+                setTimeout(() => {
+                    el.classList.remove('hint-highlight');
+                }, 2000);
+            }
+        }
+
+        // --- CRONÔMETRO ---
+        function startTimer() {
+            stopTimer();
+            state.lastTickTime = performance.now();
+            state.lastUrgentSecond = -1;
+
+            state.timerInterval = setInterval(() => {
+                if (!state.isPlaying) return;
+                const now = performance.now();
+                const dt = (now - state.lastTickTime) / 1000;
+                state.lastTickTime = now;
+
+                state.timeLeft = Math.max(0, state.timeLeft - dt);
+                updateTimerUI();
+
+                if (state.timeLeft <= 0) {
+                    handleTimeOut();
+                }
+            }, 50);
+        }
+
+        function stopTimer() {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+            }
+        }
+
+        function updateTimerUI() {
+            const pct = (state.timeLeft / state.maxTime) * 100;
+            const bar = document.getElementById('timer-bar');
+            const text = document.getElementById('timer-text');
+
+            bar.style.width = `${pct}%`;
+            text.textContent = `${state.timeLeft.toFixed(1)}s`;
+
+            if (state.timeLeft <= 10) {
+                bar.className = 'h-full rounded-full bg-gradient-to-r from-rose-500 to-amber-500 timer-urgent transition-all duration-75 ease-linear';
+                const sec = Math.ceil(state.timeLeft);
+                if (sec !== state.lastUrgentSecond && sec > 0) {
+                    state.lastUrgentSecond = sec;
+                    sfx.playUrgentTick();
+                }
+            } else {
+                bar.className = 'h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-100 ease-linear';
+            }
+        }
+
+        // --- FLUXO DE NÍVEIS E TELAS ---
+        function loadLevel(idx) {
+            state.currentLevelIdx = idx;
+            const config = LEVELS[idx];
+            state.size = config.size;
+            state.maxTime = config.time;
+            state.timeLeft = config.time;
+            state.clicks = 0;
+            state.hintsLeft = 1;
+            state.isPlaying = true;
+
+            // Atualiza HUD
+            document.getElementById('level-subtitle').textContent = `NÍVEL ${config.level} • ${config.title}`;
+            document.getElementById('level-badge').textContent = `${config.level}/${LEVELS.length}`;
+            document.getElementById('clicks-count').textContent = '0';
+            document.getElementById('hint-count').textContent = '1';
+            document.getElementById('hint-btn').disabled = false;
+
+            state.grid = generateValidLevel(config);
+            renderBoard();
+            evaluatePower();
+            updateTimerUI();
+            startTimer();
+        }
+
+        function handleLevelComplete() {
+            state.isPlaying = false;
+            stopTimer();
+            sfx.playWin();
+
+            const timeSpent = (state.maxTime - state.timeLeft).toFixed(1);
+            const timeBonus = Math.round(state.timeLeft * 25);
+            const efficiencyBonus = Math.max(50, 300 - state.clicks * 10);
+            const levelScore = timeBonus + efficiencyBonus;
+            state.score += levelScore;
+            document.getElementById('score-display').textContent = state.score;
+
+            const isFinalLevel = state.currentLevelIdx === LEVELS.length - 1;
+
+            showModal({
+                type: 'win',
+                title: isFinalLevel ? 'REDE 100% ENERGIZADA!' : `NÍVEL ${state.currentLevelIdx + 1} CONCLUÍDO!`,
+                desc: isFinalLevel
+                    ? `Incrível! Você dominou todos os circuitos com ${state.score} pontos totais.`
+                    : 'Fluxo estabilizado com sucesso. Pronto para a próxima sobrecarga?',
+                stats: {
+                    time: `${timeSpent}s`,
+                    clicks: state.clicks,
+                    points: `+${levelScore}`
+                },
+                btnText: isFinalLevel ? 'JOGAR NOVAMENTE' : 'PRÓXIMO NÍVEL',
+                action: () => {
+                    hideModal();
+                    if (isFinalLevel) {
+                        state.score = 0;
+                        document.getElementById('score-display').textContent = '0';
+                        loadLevel(0);
+                    } else {
+                        loadLevel(state.currentLevelIdx + 1);
+                    }
+                }
+            });
+        }
+
+        function handleTimeOut() {
+            state.isPlaying = false;
+            stopTimer();
+            sfx.playLose();
+
+            showModal({
+                type: 'lose',
+                title: 'TEMPO ESGOTADO!',
+                desc: 'A energia caiu antes de atingir todos os núcleos. Ajuste a rota e tente de novo!',
+                stats: {
+                    time: `${state.maxTime.toFixed(1)}s`,
+                    clicks: state.clicks,
+                    points: '+0'
+                },
+                btnText: 'TENTAR NOVAMENTE',
+                action: () => {
+                    hideModal();
+                    loadLevel(state.currentLevelIdx);
+                }
+            });
+        }
+
+        function showModal({ type, title, desc, stats, btnText, action }) {
+            const overlay = document.getElementById('modal-overlay');
+            const iconBox = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const descEl = document.getElementById('modal-desc');
+            const statsBox = document.getElementById('modal-stats');
+            const actionBtn = document.getElementById('modal-action-btn');
+
+            titleEl.textContent = title;
+            descEl.textContent = desc;
+            actionBtn.textContent = btnText;
+
+            if (type === 'win') {
+                iconBox.className = 'w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center shadow-[0_0_24px_rgba(0,255,136,0.45)]';
+                iconBox.innerHTML = `<svg class="w-9 h-9 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+            } else if (type === 'lose') {
+                iconBox.className = 'w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-400/60 flex items-center justify-center shadow-[0_0_24px_rgba(255,0,127,0.45)]';
+                iconBox.innerHTML = `<svg class="w-9 h-9 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            }
+
+            if (stats) {
+                statsBox.classList.remove('hidden');
+                document.getElementById('stat-time').textContent = stats.time;
+                document.getElementById('stat-clicks').textContent = stats.clicks;
+                document.getElementById('stat-points').textContent = stats.points;
+            } else {
+                statsBox.classList.add('hidden');
+            }
+
+            actionBtn.onclick = action;
+            overlay.classList.remove('hidden');
+        }
+
+        function hideModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        // --- EVENTOS DOS BOTÕES FIXOS ---
+        document.getElementById('modal-action-btn').onclick = () => {
+            sfx.init();
+            hideModal();
+            loadLevel(0);
+        };
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            if (!state.isPlaying) return;
+            sfx.playRotate();
+            loadLevel(state.currentLevelIdx);
+        });
+
+        document.getElementById('hint-btn').addEventListener('click', useHint);
+
+        document.getElementById('mute-btn').addEventListener('click', () => {
+            state.muted = !state.muted;
+            document.getElementById('icon-sound-on').classList.toggle('hidden', state.muted);
+            document.getElementById('icon-sound-off').classList.toggle('hidden', !state.muted);
+        });
+
+        // Prepara visualização inicial no fundo antes de clicar em Iniciar
+        window.onload = () => {
+            state.grid = generateValidLevel(LEVELS[0]);
+            renderBoard();
+            evaluatePower();
+        };
+    </script>
+</body>
+</html>
