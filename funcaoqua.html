@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>X2 Parábola — Fusão Quadrática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@600;700;800&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Identidade Visual: Dark Mode Neon com Grade Matemática e Parábolas */
+        body {
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #090d16;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.14) 0%, transparent 55%),
+                linear-gradient(rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+            background-size: 100% 100%, 28px 28px, 28px 28px;
+            overflow-x: hidden;
+        }
+
+        .font-math {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Paleta vibrante e distinta para valores numéricos */
+        .tile-neg   { background: linear-gradient(135deg, #64748b, #334155); color: #f8fafc; box-shadow: 0 4px 0 #1e293b; }
+        .tile-0     { background: linear-gradient(135deg, #475569, #1e293b); color: #e2e8f0; box-shadow: 0 4px 0 #0f172a; }
+        .tile-1     { background: linear-gradient(135deg, #2dd4bf, #0d9488); color: #ffffff; box-shadow: 0 4px 0 #0f766e; }
+        .tile-2     { background: linear-gradient(135deg, #38bdf8, #0284c7); color: #ffffff; box-shadow: 0 4px 0 #0369a1; }
+        .tile-3     { background: linear-gradient(135deg, #34d399, #059669); color: #ffffff; box-shadow: 0 4px 0 #047857; }
+        .tile-4     { background: linear-gradient(135deg, #60a5fa, #2563eb); color: #ffffff; box-shadow: 0 4px 0 #1d4ed8; }
+        .tile-5     { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #ffffff; box-shadow: 0 4px 0 #5b21b6; }
+        .tile-6     { background: linear-gradient(135deg, #f472b6, #db2777); color: #ffffff; box-shadow: 0 4px 0 #be185d; }
+        .tile-8     { background: linear-gradient(135deg, #fbbf24, #d97706); color: #ffffff; box-shadow: 0 4px 0 #b45309; }
+        .tile-9     { background: linear-gradient(135deg, #fb7185, #e11d48); color: #ffffff; box-shadow: 0 4px 0 #be123c; }
+        .tile-10    { background: linear-gradient(135deg, #4ade80, #16a34a); color: #ffffff; box-shadow: 0 4px 0 #15803d; }
+        .tile-12    { background: linear-gradient(135deg, #22d3ee, #0891b2); color: #ffffff; box-shadow: 0 4px 0 #0e7490; }
+        .tile-16    { background: linear-gradient(135deg, #fb923c, #ea580c); color: #ffffff; box-shadow: 0 4px 0 #c2410c; }
+        .tile-18    { background: linear-gradient(135deg, #e879f9, #c026d3); color: #ffffff; box-shadow: 0 4px 0 #a21caf; }
+        .tile-20    { background: linear-gradient(135deg, #a3e635, #65a30d); color: #ffffff; box-shadow: 0 4px 0 #4d7c0f; }
+        .tile-32    { background: linear-gradient(135deg, #f87171, #dc2626); color: #ffffff; box-shadow: 0 4px 0 #b91c1c; }
+        .tile-64    { background: linear-gradient(135deg, #ec4899, #be185d); color: #ffffff; box-shadow: 0 4px 0 #9d174d; }
+        .tile-128   { background: linear-gradient(135deg, #a855f7, #7e22ce); color: #ffffff; box-shadow: 0 4px 0 #6b21a8; }
+        .tile-256   { background: linear-gradient(135deg, #6366f1, #4338ca); color: #ffffff; box-shadow: 0 4px 0 #3730a3; }
+        .tile-512   { background: linear-gradient(135deg, #14b8a6, #0f766e); color: #ffffff; box-shadow: 0 4px 0 #115e59; }
+        .tile-1024  { background: linear-gradient(135deg, #eab308, #a16207); color: #ffffff; box-shadow: 0 4px 0 #854d0e; }
+        .tile-2048  { background: linear-gradient(135deg, #fde047, #eab308); color: #0f172a; box-shadow: 0 4px 0 #ca8a04, 0 0 20px rgba(250, 204, 21, 0.75); }
+        .tile-super { background: linear-gradient(135deg, #ff0080, #7928ca); color: #ffffff; box-shadow: 0 4px 0 #4c1d95, 0 0 24px rgba(236, 72, 153, 0.8); }
+
+        /* Visual diferenciado para Blocos de Função (borda tracejada neon) */
+        .tile-equation {
+            background: linear-gradient(145deg, #172033, #0f172a);
+            border: 2px dashed #38bdf8;
+            color: #7dd3fc;
+            box-shadow: 0 4px 0 #0284c7, inset 0 0 12px rgba(56, 189, 248, 0.25);
+        }
+
+        /* Bloco Vértice (Coringa) */
+        .tile-vertex {
+            background: conic-gradient(from 45deg, #06b6d4, #8b5cf6, #ec4899, #f59e0b, #10b981, #06b6d4);
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+            box-shadow: 0 4px 0 #312e81, 0 0 20px rgba(168, 85, 247, 0.8);
+            animation: pulseVertex 1.4s infinite ease-in-out;
+        }
+
+        @keyframes pulseVertex {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        /* Animação de disparo para cima */
+        @keyframes shootUp {
+            0% { transform: translateY(180px) scale(0.85); opacity: 0.7; }
+            75% { transform: translateY(-6px) scale(1.04); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .anim-shoot {
+            animation: shootUp 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* Animação de fusão e brilho */
+        @keyframes mergePop {
+            0% { transform: scale(0.7); filter: brightness(1.8); }
+            50% { transform: scale(1.18); filter: brightness(1.4); box-shadow: 0 0 26px rgba(56, 189, 248, 0.9); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .anim-merge {
+            animation: mergePop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Animação de gravidade para cima */
+        @keyframes slideUp {
+            0% { transform: translateY(45px); }
+            100% { transform: translateY(0); }
+        }
+        .anim-gravity {
+            animation: slideUp 0.18s ease-out forwards;
+        }
+
+        /* Números flutuantes de pontuação */
+        @keyframes floatScore {
+            0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+            20% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
+            100% { transform: translate(-50%, -55px) scale(1); opacity: 0; }
+        }
+        .floating-score {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 800;
+            color: #38bdf8;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+            z-index: 40;
+            animation: floatScore 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Destaque sutil da coluna */
+        .col-hover-guide {
+            transition: background-color 0.15s ease;
+        }
+        .col-hover-guide:hover {
+            background-color: rgba(56, 189, 248, 0.08);
+        }
+
+        /* Barra de tempo do desafio relâmpago */
+        @keyframes shrinkBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        .timer-bar-anim {
+            animation: shrinkBar 12s linear forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col items-center justify-between py-2 px-3 text-slate-100 relative">
+
+    <!-- Gráficos de Parábolas Sutis no Fundo (SVG Decorativo) -->
+    <svg class="fixed inset-0 w-full h-full pointer-events-none opacity-15 z-0" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice">
+        <!-- Eixos Cartesianos -->
+        <line x1="400" y1="0" x2="400" y2="900" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 6" />
+        <line x1="0" y1="450" x2="800" y2="450" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 6" />
+        <!-- Parábola com concavidade para cima (a > 0) -->
+        <path d="M 120 120 Q 400 780 680 120" fill="none" stroke="#22d3ee" stroke-width="3" />
+        <!-- Parábola com concavidade para baixo (a < 0) -->
+        <path d="M 160 820 Q 400 180 640 820" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="10 6" />
+        <!-- Vértice destacado -->
+        <circle cx="400" cy="450" r="5" fill="#f472b6" />
+    </svg>
+
+    <!-- Cabeçalho, Placar e Ações -->
+    <header class="w-full max-w-4xl flex flex-col gap-1.5 z-20 shrink-0">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 flex items-center justify-center font-extrabold text-base shadow-lg shadow-cyan-500/25 border border-cyan-300/30">
+                    x²
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-none text-white flex items-center gap-1.5">
+                        X2 Parábola
+                    </h1>
+                    <span class="text-[10px] text-cyan-300/80 font-math">f(x) = ax² + bx + c</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <!-- Botão Som -->
+                <button id="btn-sound" aria-label="Alternar som" class="p-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-slate-200 transition active:scale-95 shadow-md cursor-pointer">
+                    <svg id="icon-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    </svg>
+                    <svg id="icon-sound-off" class="w-4 h-4 hidden text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                    </svg>
+                </button>
+
+                <!-- Botão Reiniciar -->
+                <button id="btn-restart" aria-label="Reiniciar jogo" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-rose-600/90 border border-slate-700/80 hover:border-rose-500 text-xs font-bold text-slate-200 transition active:scale-95 shadow-md flex items-center gap-1 cursor-pointer" title="Reiniciar">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Reiniciar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Placar Atual, Recorde e Barra do Desafio Relâmpago -->
+        <div class="grid grid-cols-3 gap-2">
+            <div class="bg-slate-900/85 backdrop-blur border border-slate-700/80 rounded-xl py-1 px-2 text-center shadow-inner">
+                <div class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Pontos</div>
+                <div id="score-display" class="text-sm sm:text-base font-extrabold text-white leading-tight">0</div>
+            </div>
+            <div class="bg-slate-900/85 backdrop-blur border border-slate-700/80 rounded-xl py-1 px-2 text-center shadow-inner">
+                <div class="text-[9px] uppercase tracking-wider text-amber-400 font-bold">Recorde</div>
+                <div id="best-display" class="text-sm sm:text-base font-extrabold text-amber-300 leading-tight">0</div>
+            </div>
+            <div class="bg-slate-900/85 backdrop-blur border border-slate-700/80 rounded-xl py-1 px-2 text-center shadow-inner flex flex-col justify-center">
+                <div class="text-[9px] uppercase tracking-wider text-cyan-300 font-bold">Vértice Bônus</div>
+                <div class="w-full bg-slate-950 rounded-full h-1.5 mt-0.5 overflow-hidden border border-slate-700">
+                    <div id="bonus-progress" class="bg-gradient-to-r from-cyan-400 to-purple-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div id="bonus-counter-text" class="text-[9px] text-slate-400 mt-0.5 font-semibold leading-none">0 / 8 jogadas</div>
+            </div>
+        </div>
+
+        <!-- Mini-Painel: Desafio Relâmpago (Bônus de Parábola a cada 8 jogadas) -->
+        <div id="parabola-challenge-bar" class="hidden relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-2 border-cyan-400/80 rounded-2xl p-2.5 shadow-2xl transition-all">
+            <div class="flex items-center justify-between mb-1">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded-full">
+                    ⚡ Desafio Relâmpago: Ganhe Bloco Vértice (2×)
+                </span>
+                <span id="challenge-timer-text" class="text-xs font-bold text-amber-300 font-math">12s</span>
+            </div>
+            <p id="challenge-question" class="text-xs font-bold text-white mb-2 leading-snug">
+                Se a &gt; 0, a concavidade da parábola é para...
+            </p>
+            <div id="challenge-options" class="grid grid-cols-2 gap-2">
+                <!-- Botões inseridos via JS -->
+            </div>
+            <div class="absolute bottom-0 left-0 h-1 bg-cyan-400" id="challenge-timer-bar"></div>
+        </div>
+    </header>
+
+    <!-- Layout Principal: Tabuleiro + Lançador à Esquerda | Cola Rápida Fixa ao Lado -->
+    <div class="w-full max-w-4xl my-1 flex-1 min-h-0 flex flex-col lg:flex-row items-center justify-center gap-3 z-20">
+        
+        <!-- Coluna do Jogo (Tabuleiro + Lançador Compacto) -->
+        <div class="w-full max-w-[330px] sm:max-w-[355px] flex flex-col items-center justify-center gap-1.5">
+            <!-- Banner de Feedback Educativo e Combos -->
+            <div id="edu-banner" class="pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-1 px-3 py-0.5 rounded-full bg-cyan-400 text-slate-950 font-extrabold text-[11px] sm:text-xs shadow-lg text-center max-w-full truncate">
+                f(2) = 2² = 4 → Fundiu!
+            </div>
+
+            <!-- Container do Grid 5x7 Compacto -->
+            <div id="board-wrapper" class="relative w-full bg-slate-900/90 p-2 rounded-2xl border-2 border-slate-700/80 shadow-2xl">
+                <!-- Camada de Colunas Clicáveis / Tocáveis -->
+                <div id="columns-overlay" class="absolute inset-2 grid grid-cols-5 gap-1.5 z-20">
+                    <button data-col="0" aria-label="Coluna 1" class="col-hover-guide rounded-xl h-full w-full focus:outline-none cursor-pointer flex flex-col justify-end items-center pb-1 group">
+                        <span class="opacity-0 group-hover:opacity-75 transition-opacity text-cyan-300 text-[10px] font-bold">▲</span>
+                    </button>
+                    <button data-col="1" aria-label="Coluna 2" class="col-hover-guide rounded-xl h-full w-full focus:outline-none cursor-pointer flex flex-col justify-end items-center pb-1 group">
+                        <span class="opacity-0 group-hover:opacity-75 transition-opacity text-cyan-300 text-[10px] font-bold">▲</span>
+                    </button>
+                    <button data-col="2" aria-label="Coluna 3" class="col-hover-guide rounded-xl h-full w-full focus:outline-none cursor-pointer flex flex-col justify-end items-center pb-1 group">
+                        <span class="opacity-0 group-hover:opacity-75 transition-opacity text-cyan-300 text-[10px] font-bold">▲</span>
+                    </button>
+                    <button data-col="3" aria-label="Coluna 4" class="col-hover-guide rounded-xl h-full w-full focus:outline-none cursor-pointer flex flex-col justify-end items-center pb-1 group">
+                        <span class="opacity-0 group-hover:opacity-75 transition-opacity text-cyan-300 text-[10px] font-bold">▲</span>
+                    </button>
+                    <button data-col="4" aria-label="Coluna 5" class="col-hover-guide rounded-xl h-full w-full focus:outline-none cursor-pointer flex flex-col justify-end items-center pb-1 group">
+                        <span class="opacity-0 group-hover:opacity-75 transition-opacity text-cyan-300 text-[10px] font-bold">▲</span>
+                    </button>
+                </div>
+
+                <!-- Grade Visual (5 colunas x 7 linhas = 35 células) -->
+                <div id="grid-container" class="grid grid-cols-5 gap-1.5 relative z-10">
+                    <!-- Células geradas via JavaScript -->
+                </div>
+
+                <!-- Camada de Efeitos Flutuantes -->
+                <div id="effects-layer" class="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-2xl"></div>
+            </div>
+
+            <!-- Área Inferior do Jogo: Lançador (Bloco Atual) e Prévia do Próximo Bloco -->
+            <div class="w-full bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-2xl p-2 shadow-xl flex items-center justify-between gap-2">
+                <div class="flex flex-col flex-1 min-w-0">
+                    <span id="launcher-type-badge" class="inline-block w-fit text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 mb-0.5">
+                        Número Simples
+                    </span>
+                    <span id="launcher-hint" class="text-[11px] text-slate-300 font-medium truncate">
+                        Toque na coluna para lançar ▲
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <!-- Bloco Atual -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-[9px] uppercase font-bold text-cyan-300 mb-0.5 tracking-wider">Atual</span>
+                        <div id="current-block-preview" class="w-13 h-13 sm:w-14 sm:h-14 rounded-xl flex flex-col items-center justify-center font-extrabold text-center p-1 transition-transform duration-200 shadow-lg">
+                            4
+                        </div>
+                    </div>
+
+                    <!-- Próximo Bloco -->
+                    <div class="flex flex-col items-center opacity-85">
+                        <span class="text-[9px] uppercase font-bold text-slate-400 mb-0.5 tracking-wider">Próximo</span>
+                        <div id="next-block-preview" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex flex-col items-center justify-center font-bold text-center p-1 shadow-md">
+                            8
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel Lateral Fixo: Cola Rápida de Função do 2º Grau -->
+        <aside class="w-full max-w-[330px] sm:max-w-[355px] lg:max-w-xs bg-slate-900/90 backdrop-blur border-2 border-indigo-500/40 rounded-2xl p-3 shadow-2xl flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 border-b border-slate-800 pb-2 mb-2">
+                    <span class="text-lg">📐</span>
+                    <div>
+                        <h2 class="text-sm sm:text-base font-extrabold text-white leading-tight">Cola Rápida</h2>
+                        <span class="text-[10px] text-indigo-300 font-semibold">Fórmulas de Função do 2º Grau</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-xs text-slate-300">
+                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/70">
+                        <div class="font-bold text-cyan-300 text-[11px] mb-0.5">1. Forma Geral e Concavidade</div>
+                        <div class="font-math text-white text-xs mb-0.5">f(x) = ax² + bx + c</div>
+                        <p class="text-slate-400 text-[11px] leading-snug">
+                            • <b>a &gt; 0</b>: cima (U) &nbsp;|&nbsp; <b>a &lt; 0</b>: baixo (∩)<br>
+                            • <b>c</b>: corte no eixo Y, pois <b>f(0) = c</b>.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/70">
+                        <div class="font-bold text-amber-300 text-[11px] mb-0.5">2. Discriminante (Delta)</div>
+                        <div class="font-math text-white text-xs mb-0.5">Δ = b² - 4·a·c</div>
+                        <p class="text-slate-400 text-[11px] leading-snug">
+                            • <b>Δ &gt; 0</b>: 2 raízes &nbsp;|&nbsp; <b>Δ = 0</b>: 1 raiz &nbsp;|&nbsp; <b>Δ &lt; 0</b>: nenhuma
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/70">
+                        <div class="font-bold text-emerald-300 text-[11px] mb-0.5">3. Fórmula de Bhaskara (Raízes)</div>
+                        <div class="font-math text-white text-xs mb-0.5">x = (-b ± √Δ) / (2·a)</div>
+                        <p class="text-slate-400 text-[11px] leading-snug">
+                            Encontra os valores de <b>x</b> onde <b>f(x) = 0</b>.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/70">
+                        <div class="font-bold text-purple-300 text-[11px] mb-0.5">4. Coordenadas do Vértice</div>
+                        <div class="font-math text-white text-xs mb-0.5">Xv = -b / (2·a) &nbsp;|&nbsp; Yv = -Δ / (4·a)</div>
+                        <p class="text-slate-400 text-[11px] leading-snug">
+                            Ponto de máximo (<b>a &lt; 0</b>) ou mínimo (<b>a &gt; 0</b>).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-2 pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+                <span>Teclas <b class="text-slate-200">1–5</b> lançam</span>
+                <span class="text-cyan-300 font-bold">f(x) exibe = Resultado</span>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modal: Game Over -->
+    <div id="gameover-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-3xl">
+                📉
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-1">Fim de Jogo!</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mb-5">O tabuleiro ficou cheio e sem fusões possíveis.</p>
+
+            <div class="bg-slate-800/90 rounded-2xl p-4 mb-6 border border-slate-700/80 flex justify-around">
+                <div>
+                    <div class="text-[11px] text-slate-400 uppercase font-bold">Pontuação Final</div>
+                    <div id="final-score" class="text-2xl font-extrabold text-white mt-0.5">0</div>
+                </div>
+                <div class="w-px bg-slate-700"></div>
+                <div>
+                    <div class="text-[11px] text-amber-400 uppercase font-bold">Melhor Recorde</div>
+                    <div id="final-best" class="text-2xl font-extrabold text-amber-300 mt-0.5">0</div>
+                </div>
+            </div>
+
+            <button id="btn-play-again" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-extrabold text-base sm:text-lg shadow-lg shadow-cyan-500/30 transition active:scale-95 cursor-pointer">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * X2 Parábola - Jogo Educativo de Função do 2º Grau + Fusão de Blocos
+         * Grade: 5 colunas x 7 linhas (linha 0 = topo, linha 6 = base)
+         */
+        (() => {
+            const COLS = 5;
+            const ROWS = 7;
+            const MOVES_FOR_CHALLENGE = 8;
+
+            /**
+             * Banco de Blocos de Função do 2º Grau
+             * Cada objeto traz:
+             * - topLabel: rótulo superior curto (ex: "f(2)", "Δ", "Xv", "Raiz +", "c")
+             * - subLabel: expressão quadrática (ex: "x²", "x²-4x+4", "x²-9")
+             * - value: resultado numérico exato da expressão
+             * - explanation: explicação educativa exibida ao fundir
+             */
+            const EQUATION_BANK = [
+                { topLabel: 'f(2)', subLabel: 'x²', value: 4, explanation: 'f(2) = 2² = 4' },
+                { topLabel: 'f(3)', subLabel: 'x² - 1', value: 8, explanation: 'f(3) = 3² - 1 = 9 - 1 = 8' },
+                { topLabel: 'f(4)', subLabel: 'x²', value: 16, explanation: 'f(4) = 4² = 16' },
+                { topLabel: 'f(1)', subLabel: '2x² + 2', value: 4, explanation: 'f(1) = 2(1)² + 2 = 4' },
+                { topLabel: 'f(0)', subLabel: 'x² - 5x + 8', value: 8, explanation: 'f(0) = c = 8' },
+                { topLabel: 'f(2)', subLabel: 'x² + 4', value: 8, explanation: 'f(2) = 2² + 4 = 8' },
+                { topLabel: 'f(-2)', subLabel: 'x²', value: 4, explanation: 'f(-2) = (-2)² = 4' },
+                { topLabel: 'f(-3)', subLabel: 'x² - 1', value: 8, explanation: 'f(-3) = (-3)² - 1 = 8' },
+                { topLabel: 'Δ de', subLabel: 'x² - 4x + 4', value: 0, explanation: 'Δ = (-4)² - 4·1·4 = 16 - 16 = 0' },
+                { topLabel: 'Δ de', subLabel: 'x² - 2x', value: 4, explanation: 'Δ = (-2)² - 4·1·0 = 4' },
+                { topLabel: 'Δ de', subLabel: 'x² - 4x + 2', value: 8, explanation: 'Δ = (-4)² - 4·1·2 = 16 - 8 = 8' },
+                { topLabel: 'Δ de', subLabel: 'x² - 4', value: 16, explanation: 'Δ = 0² - 4·1·(-4) = 16' },
+                { topLabel: 'Δ de', subLabel: 'x² - 3x + 2', value: 1, explanation: 'Δ = (-3)² - 4·1·2 = 9 - 8 = 1' },
+                { topLabel: 'Raiz +', subLabel: 'x² - 4 = 0', value: 2, explanation: 'x² = 4 → Raiz positiva = 2' },
+                { topLabel: 'Raiz +', subLabel: 'x² - 9 = 0', value: 3, explanation: 'x² = 9 → Raiz positiva = 3' },
+                { topLabel: 'Raiz +', subLabel: 'x² - 16 = 0', value: 4, explanation: 'x² = 16 → Raiz positiva = 4' },
+                { topLabel: 'Raiz -', subLabel: 'x² - 9 = 0', value: -3, explanation: 'x² = 9 → Raiz negativa = -3' },
+                { topLabel: 'Xv de', subLabel: 'x² - 4x + 3', value: 2, explanation: 'Xv = -(-4) / (2·1) = 4 / 2 = 2' },
+                { topLabel: 'Xv de', subLabel: 'x² - 6x + 5', value: 3, explanation: 'Xv = -(-6) / (2·1) = 6 / 2 = 3' },
+                { topLabel: 'Xv de', subLabel: 'x² - 8x + 7', value: 4, explanation: 'Xv = -(-8) / (2·1) = 8 / 2 = 4' },
+                { topLabel: 'Yv de', subLabel: 'x² - 4x + 5', value: 1, explanation: 'Δ = 16 - 20 = -4 → Yv = -(-4)/4 = 1' },
+                { topLabel: 'Valor c', subLabel: '2x² - 5x + 2', value: 2, explanation: 'Termo independente c = 2' }
+            ];
+
+            /**
+             * Banco de Perguntas Conceituais para o Desafio Relâmpago (a cada 8 jogadas)
+             */
+            const CHALLENGE_QUESTIONS = [
+                {
+                    q: 'Se a > 0 em f(x) = ax² + bx + c, a concavidade da parábola é para...',
+                    options: ['Cima (U)', 'Baixo (∩)'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Se a < 0 em f(x) = ax² + bx + c, a parábola possui um ponto de...',
+                    options: ['Máximo', 'Mínimo'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Qual o valor do coeficiente c na função f(x) = 2x² - 5x + 3?',
+                    options: ['3', '-5'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Quando o discriminante Δ = 0, quantas raízes reais distintas a função possui?',
+                    options: ['Apenas 1 (raiz dupla)', '2 raízes diferentes'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Quando Δ < 0, a parábola corta o eixo X em quantos pontos?',
+                    options: ['Nenhum ponto (0)', 'Dois pontos (2)'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Qual é o valor de Xv (x do vértice) para f(x) = x² - 6x + 8?',
+                    options: ['Xv = 3', 'Xv = -3'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Onde o gráfico de f(x) = 3x² + 4x - 2 corta o eixo vertical Y?',
+                    options: ['No ponto (0, -2)', 'No ponto (0, 4)'],
+                    correctIndex: 0
+                },
+                {
+                    q: 'Se as raízes de uma parábola são x₁ = 2 e x₂ = 6, qual é o Xv?',
+                    options: ['Xv = 4', 'Xv = 8'],
+                    correctIndex: 0
+                }
+            ];
+
+            // Estado do Jogo
+            // Cada célula do grid é null OU um objeto:
+            // { kind: 'number', value: number }
+            // { kind: 'equation', value: number, topLabel: string, subLabel: string, explanation: string }
+            let grid = [];
+            let score = 0;
+            let bestScore = parseInt(localStorage.getItem('x2_parabola_best') || '0', 10);
+            let currentBlock = null;
+            let nextBlock = null;
+            let movesCount = 0;
+            let isAnimating = false;
+            let isGameOver = false;
+            let soundEnabled = true;
+
+            // Estado do Desafio Relâmpago
+            let challengeActive = false;
+            let challengeTimer = null;
+            let challengeCountdown = null;
+
+            // Referências DOM
+            const gridContainer = document.getElementById('grid-container');
+            const effectsLayer = document.getElementById('effects-layer');
+            const scoreDisplay = document.getElementById('score-display');
+            const bestDisplay = document.getElementById('best-display');
+            const bonusProgress = document.getElementById('bonus-progress');
+            const bonusCounterText = document.getElementById('bonus-counter-text');
+            const currentBlockPreview = document.getElementById('current-block-preview');
+            const nextBlockPreview = document.getElementById('next-block-preview');
+            const launcherTypeBadge = document.getElementById('launcher-type-badge');
+            const launcherHint = document.getElementById('launcher-hint');
+            const eduBanner = document.getElementById('edu-banner');
+            const challengeBar = document.getElementById('parabola-challenge-bar');
+            const challengeQuestionEl = document.getElementById('challenge-question');
+            const challengeOptionsEl = document.getElementById('challenge-options');
+            const challengeTimerBar = document.getElementById('challenge-timer-bar');
+            const challengeTimerText = document.getElementById('challenge-timer-text');
+            const gameoverModal = document.getElementById('gameover-modal');
+
+            // Sintetizador de Áudio Web API (leve e sem URLs externas)
+            let audioCtx = null;
+            function playTone(freq, type = 'sine', duration = 0.12, gainVal = 0.07) {
+                if (!soundEnabled) return;
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            const playShootSound = () => playTone(340, 'triangle', 0.1, 0.06);
+            const playMergeSound = (combo = 1) => {
+                const base = 400 + Math.min(combo * 85, 550);
+                playTone(base, 'sine', 0.16, 0.09);
+                setTimeout(() => playTone(base * 1.25, 'triangle', 0.14, 0.06), 55);
+            };
+            const playBonusSound = () => {
+                playTone(523.25, 'sine', 0.12, 0.09);
+                setTimeout(() => playTone(659.25, 'sine', 0.12, 0.09), 85);
+                setTimeout(() => playTone(783.99, 'sine', 0.2, 0.11), 170);
+            };
+
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            /**
+             * Gera um novo bloco para o jogador lançar:
+             * ~55% Números Simples (combináveis com o tabuleiro ou resultados das equações)
+             * ~45% Blocos de Função do 2º Grau
+             */
+            function generateNextBlock() {
+                const isEquation = Math.random() < 0.45;
+                if (isEquation) {
+                    const eq = EQUATION_BANK[Math.floor(Math.random() * EQUATION_BANK.length)];
+                    return {
+                        kind: 'equation',
+                        value: eq.value,
+                        topLabel: eq.topLabel,
+                        subLabel: eq.subLabel,
+                        explanation: eq.explanation
+                    };
+                } else {
+                    const simplePool = [1, 2, 2, 3, 4, 4, 8, 8, 16, 0, -3];
+                    const val = simplePool[Math.floor(Math.random() * simplePool.length)];
+                    return { kind: 'number', value: val };
+                }
+            }
+
+            // Classe CSS por valor numérico
+            function getNumberTileClass(val) {
+                if (val < 0) return 'tile-neg';
+                if (val === 0) return 'tile-0';
+                const known = [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 16, 18, 20, 32, 64, 128, 256, 512, 1024, 2048];
+                if (known.includes(val)) return `tile-${val}`;
+                if (val > 2048) return 'tile-super';
+                return 'tile-4';
+            }
+
+            // Formata número grande
+            function formatNumber(val) {
+                if (Math.abs(val) >= 1000000) return Math.floor(val / 1000000) + 'M';
+                if (Math.abs(val) >= 10000) return Math.floor(val / 1000) + 'K';
+                return val.toString();
+            }
+
+            // Atualiza placar, barra de progresso e prévia dos blocos
+            function updateHUD() {
+                scoreDisplay.textContent = score.toLocaleString('pt-BR');
+                if (score > bestScore) {
+                    bestScore = score;
+                    localStorage.setItem('x2_parabola_best', bestScore.toString());
+                }
+                bestDisplay.textContent = bestScore.toLocaleString('pt-BR');
+
+                const step = movesCount % MOVES_FOR_CHALLENGE;
+                const pct = challengeActive ? 100 : (step / MOVES_FOR_CHALLENGE) * 100;
+                bonusProgress.style.width = `${pct}%`;
+                bonusCounterText.textContent = challengeActive
+                    ? 'Desafio Ativo!'
+                    : `${step} / ${MOVES_FOR_CHALLENGE} jogadas`;
+
+                renderLauncherBlock(currentBlockPreview, currentBlock, true);
+                renderLauncherBlock(nextBlockPreview, nextBlock, false);
+
+                // Atualiza texto explicativo do tipo de bloco atual no rodapé
+                if (currentBlock.kind === 'vertex') {
+                    launcherTypeBadge.textContent = '★ Bloco Vértice (Coringa)';
+                    launcherTypeBadge.className = 'inline-block w-fit text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-purple-500/30 text-purple-200 mb-1';
+                    launcherHint.textContent = 'Funde com QUALQUER número e dobra!';
+                } else if (currentBlock.kind === 'equation') {
+                    launcherTypeBadge.textContent = 'ƒ(x) Bloco de Função';
+                    launcherTypeBadge.className = 'inline-block w-fit text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-cyan-500/25 text-cyan-300 mb-1';
+                    launcherHint.textContent = 'Resolva mentalmente e mire no resultado!';
+                } else {
+                    launcherTypeBadge.textContent = 'Número Simples';
+                    launcherTypeBadge.className = 'inline-block w-fit text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-slate-700 text-slate-200 mb-1';
+                    launcherHint.textContent = 'Mire em número igual ou equação equivalente!';
+                }
+            }
+
+            function renderLauncherBlock(el, block, isMain) {
+                const baseSize = isMain
+                    ? 'w-14 h-14 rounded-xl flex flex-col items-center justify-center font-extrabold text-center p-1 transition-transform duration-200 shadow-lg '
+                    : 'w-11 h-11 rounded-xl flex flex-col items-center justify-center font-bold text-center p-1 shadow-md ';
+
+                el.innerHTML = '';
+
+                if (block.kind === 'vertex') {
+                    el.className = baseSize + 'tile-vertex';
+                    el.innerHTML = `<span class="${isMain ? 'text-base' : 'text-xs'}">V(2×)</span>`;
+                } else if (block.kind === 'equation') {
+                    el.className = baseSize + 'tile-equation font-math';
+                    const topSpan = document.createElement('span');
+                    topSpan.className = isMain ? 'text-[10px] text-amber-300 font-bold leading-none' : 'text-[8px] text-amber-300 font-bold leading-none';
+                    topSpan.textContent = block.topLabel;
+
+                    const subSpan = document.createElement('span');
+                    subSpan.className = isMain ? 'text-[9px] text-cyan-200 font-extrabold leading-tight mt-0.5' : 'text-[7px] text-cyan-200 font-bold leading-tight mt-0.5';
+                    subSpan.textContent = block.subLabel;
+
+                    el.appendChild(topSpan);
+                    el.appendChild(subSpan);
+                } else {
+                    const str = formatNumber(block.value);
+                    const textSize = str.length >= 4
+                        ? (isMain ? 'text-sm' : 'text-xs')
+                        : (isMain ? 'text-lg' : 'text-sm');
+                    el.className = `${baseSize} ${textSize} ${getNumberTileClass(block.value)}`;
+                    el.textContent = str;
+                }
+            }
+
+            // Exibe banner educativo ou de combo acima do tabuleiro
+            let bannerTimeout = null;
+            function showEduBanner(text, styleClass = 'bg-cyan-400 text-slate-950') {
+                eduBanner.textContent = text;
+                eduBanner.className = `pointer-events-none transition-all duration-300 transform translate-y-0 opacity-100 px-3 py-0.5 rounded-full font-extrabold text-[11px] sm:text-xs shadow-lg text-center max-w-full truncate ${styleClass}`;
+                clearTimeout(bannerTimeout);
+                bannerTimeout = setTimeout(() => {
+                    eduBanner.classList.remove('opacity-100', 'translate-y-0');
+                    eduBanner.classList.add('opacity-0', '-translate-y-1');
+                }, 2200);
+            }
+
+            // Pontos flutuantes sobre a célula
+            function spawnFloatingPoints(row, col, points) {
+                const cellEl = document.getElementById(`cell-${row}-${col}`);
+                if (!cellEl) return;
+
+                const boardRect = gridContainer.getBoundingClientRect();
+                const cellRect = cellEl.getBoundingClientRect();
+
+                const floater = document.createElement('div');
+                floater.className = 'floating-score text-sm sm:text-base';
+                floater.textContent = `+${points}`;
+                floater.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
+                floater.style.top = `${cellRect.top - boardRect.top + cellRect.height / 2}px`;
+
+                effectsLayer.appendChild(floater);
+                setTimeout(() => floater.remove(), 950);
+            }
+
+            // Renderiza a grade 5x7
+            function renderGrid(animationsMap = {}) {
+                gridContainer.innerHTML = '';
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const item = grid[r][c];
+                        const cell = document.createElement('div');
+                        cell.id = `cell-${r}-${c}`;
+                        cell.className = 'aspect-square rounded-xl bg-slate-800/45 border border-slate-700/40 flex items-center justify-center relative overflow-hidden';
+
+                        if (item !== null) {
+                            const tile = document.createElement('div');
+                            const animClass = animationsMap[`${r}-${c}`] || '';
+
+                            if (item.kind === 'equation') {
+                                tile.className = `w-full h-full rounded-xl flex flex-col items-center justify-center text-center px-0.5 py-0.5 select-none font-math tile-equation ${animClass}`;
+                                const topEl = document.createElement('span');
+                                topEl.className = 'text-[8px] sm:text-[9px] text-amber-300 font-bold leading-none';
+                                topEl.textContent = item.topLabel;
+
+                                const subEl = document.createElement('span');
+                                subEl.className = 'text-[7px] sm:text-[8px] text-cyan-200 font-bold leading-tight mt-0.5 break-words w-full';
+                                subEl.textContent = item.subLabel;
+
+                                const resEl = document.createElement('span');
+                                resEl.className = 'mt-0.5 px-1 rounded bg-emerald-400/20 text-emerald-300 text-[9px] sm:text-[10px] font-extrabold leading-tight';
+                                resEl.textContent = `= ${item.value}`;
+
+                                tile.appendChild(topEl);
+                                tile.appendChild(subEl);
+                                tile.appendChild(resEl);
+                            } else {
+                                const strVal = formatNumber(item.value);
+                                const fontSize = strVal.length >= 4
+                                    ? 'text-[11px] sm:text-xs'
+                                    : strVal.length === 3
+                                        ? 'text-sm sm:text-base'
+                                        : 'text-base sm:text-lg';
+                                tile.className = `w-full h-full rounded-xl flex items-center justify-center font-extrabold select-none ${fontSize} ${getNumberTileClass(item.value)} ${animClass}`;
+                                tile.textContent = strVal;
+                            }
+
+                            cell.appendChild(tile);
+                        }
+
+                        gridContainer.appendChild(cell);
+                    }
+                }
+            }
+
+            // Gravidade para cima: blocos sobem para ocupar espaços vazios acima
+            function applyUpwardGravity() {
+                let moved = false;
+                const gravityAnims = {};
+
+                for (let c = 0; c < COLS; c++) {
+                    let writeRow = 0;
+                    for (let r = 0; r < ROWS; r++) {
+                        if (grid[r][c] !== null) {
+                            if (r !== writeRow) {
+                                grid[writeRow][c] = grid[r][c];
+                                grid[r][c] = null;
+                                gravityAnims[`${writeRow}-${c}`] = 'anim-gravity';
+                                moved = true;
+                            }
+                            writeRow++;
+                        }
+                    }
+                }
+                return { moved, gravityAnims };
+            }
+
+            /**
+             * Encontra blocos adjacentes (horizontal/vertical) que possuam o mesmo valor numérico.
+             * Importante: Um Bloco de Função só se funde se encostar em um bloco numérico (ou outra função
+             * que também tenha o mesmo valor, desde que ao menos um já represente a resolução) com o
+             * mesmo valor resultante!
+             */
+            function findMergeableGroup(startR, startC) {
+                const startItem = grid[startR][startC];
+                if (!startItem) return [];
+
+                const targetVal = startItem.value;
+                const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+                const queue = [[startR, startC]];
+                const group = [];
+                visited[startR][startC] = true;
+
+                const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+                while (queue.length > 0) {
+                    const [r, c] = queue.shift();
+                    group.push([r, c]);
+
+                    for (const [dr, dc] of dirs) {
+                        const nr = r + dr;
+                        const nc = c + dc;
+                        if (
+                            nr >= 0 && nr < ROWS &&
+                            nc >= 0 && nc < COLS &&
+                            !visited[nr][nc] &&
+                            grid[nr][nc] !== null &&
+                            grid[nr][nc].value === targetVal
+                        ) {
+                            visited[nr][nc] = true;
+                            queue.push([nr, nc]);
+                        }
+                    }
+                }
+
+                // Se o grupo tiver 2+ blocos, verifica se não são apenas 2 equações idênticas sem número
+                // (permite equação + número correspondente, número + número, ou equação + equação diferente com mesmo valor)
+                if (group.length >= 2) {
+                    const hasNumber = group.some(([gr, gc]) => grid[gr][gc].kind === 'number');
+                    const distinctLabels = new Set(group.map(([gr, gc]) => `${grid[gr][gc].topLabel}${grid[gr][gc].subLabel}`));
+                    if (hasNumber || distinctLabels.size > 1) {
+                        return group;
+                    }
+                }
+
+                return [];
+            }
+
+            // Processa fusões diretas, fusões por resolução de equação e reações em cadeia (combos)
+            async function resolveMerges(priorityCell = null) {
+                let comboCount = 0;
+                let keepChecking = true;
+
+                while (keepChecking) {
+                    keepChecking = false;
+                    let mergedThisPass = false;
+                    const mergeAnims = {};
+
+                    const cellsToCheck = [];
+                    if (priorityCell) {
+                        cellsToCheck.push(priorityCell);
+                        priorityCell = null;
+                    }
+                    for (let r = 0; r < ROWS; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            cellsToCheck.push([r, c]);
+                        }
+                    }
+
+                    for (const [r, c] of cellsToCheck) {
+                        if (!grid[r][c]) continue;
+                        const group = findMergeableGroup(r, c);
+
+                        if (group.length >= 2) {
+                            comboCount++;
+                            mergedThisPass = true;
+                            keepChecking = true;
+
+                            const baseVal = grid[r][c].value;
+
+                            // Verifica se havia algum Bloco de Função no grupo para mostrar o feedback educativo!
+                            let solvedEquation = null;
+                            for (const [gr, gc] of group) {
+                                if (grid[gr][gc].kind === 'equation') {
+                                    solvedEquation = grid[gr][gc];
+                                    break;
+                                }
+                            }
+
+                            // Calcula novo valor após fusão (dobra para cada bloco extra)
+                            // Caso especial: se o valor base for 0 (ex: Δ = 0), fundir gera 2 para manter progressão
+                            const multiplier = Math.pow(2, group.length - 1);
+                            const newVal = baseVal === 0 ? 2 : baseVal * multiplier;
+
+                            // Célula âncora (mais alta na coluna)
+                            let anchor = group[0];
+                            for (const cell of group) {
+                                if (cell[0] < anchor[0]) anchor = cell;
+                            }
+
+                            for (const [gr, gc] of group) {
+                                grid[gr][gc] = null;
+                            }
+                            grid[anchor[0]][anchor[1]] = { kind: 'number', value: newVal };
+                            mergeAnims[`${anchor[0]}-${anchor[1]}`] = 'anim-merge';
+
+                            // Pontuação com bônus extra quando resolve equação ou faz combo
+                            const eqBonus = solvedEquation ? 25 : 0;
+                            const pointsGained = (Math.abs(newVal) * 10 + eqBonus) * comboCount;
+                            score += pointsGained;
+                            updateHUD();
+                            playMergeSound(comboCount);
+
+                            renderGrid(mergeAnims);
+                            spawnFloatingPoints(anchor[0], anchor[1], pointsGained);
+
+                            // Feedback Educativo ou de Combo
+                            if (solvedEquation) {
+                                showEduBanner(`✅ ${solvedEquation.explanation} → Fundiu para ${newVal}!`, 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950');
+                            } else if (comboCount >= 2) {
+                                showEduBanner(`🔥 COMBO ${comboCount}×! +${pointsGained} pts`, 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950');
+                            }
+
+                            priorityCell = anchor;
+                            await sleep(260);
+
+                            const grav = applyUpwardGravity();
+                            if (grav.moved) {
+                                renderGrid(grav.gravityAnims);
+                                await sleep(175);
+                            }
+
+                            break;
+                        }
+                    }
+
+                    if (!mergedThisPass) {
+                        const grav = applyUpwardGravity();
+                        if (grav.moved) {
+                            renderGrid(grav.gravityAnims);
+                            await sleep(175);
+                            keepChecking = true;
+                        }
+                    }
+                }
+            }
+
+            // Verifica se ainda há jogadas possíveis no tabuleiro
+            function checkGameOver() {
+                for (let c = 0; c < COLS; c++) {
+                    if (grid[ROWS - 1][c] === null) return false;
+                }
+                if (currentBlock.kind === 'vertex') return false;
+
+                for (let c = 0; c < COLS; c++) {
+                    const bottomItem = grid[ROWS - 1][c];
+                    if (bottomItem && bottomItem.value === currentBlock.value) {
+                        if (bottomItem.kind === 'number' || currentBlock.kind === 'number') {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Lança o bloco atual na coluna selecionada
+            async function dropBlockInColumn(col) {
+                if (isAnimating || isGameOver) return;
+                isAnimating = true;
+
+                try {
+                    let targetRow = -1;
+                    for (let r = 0; r < ROWS; r++) {
+                        if (grid[r][col] === null) {
+                            targetRow = r;
+                            break;
+                        }
+                    }
+
+                    // Caso 1: Coluna cheia, mas o bloco da base pode interagir diretamente
+                    if (targetRow === -1) {
+                        const bottomItem = grid[ROWS - 1][col];
+                        if (currentBlock.kind === 'vertex' && bottomItem !== null) {
+                            playShootSound();
+                            const doubled = bottomItem.value === 0 ? 2 : bottomItem.value * 2;
+                            grid[ROWS - 1][col] = { kind: 'number', value: doubled };
+                            score += Math.abs(doubled) * 15;
+
+                            advanceTurn();
+                            renderGrid({ [`${ROWS - 1}-${col}`]: 'anim-merge' });
+                            spawnFloatingPoints(ROWS - 1, col, Math.abs(doubled) * 15);
+                            showEduBanner(`★ Bloco Vértice dobrou para ${doubled}!`, 'bg-gradient-to-r from-purple-500 to-pink-500 text-white');
+                            playBonusSound();
+                            await sleep(260);
+                            await resolveMerges([ROWS - 1, col]);
+                            finishTurn();
+                            return;
+                        } else if (
+                            bottomItem &&
+                            bottomItem.value === currentBlock.value &&
+                            (bottomItem.kind === 'number' || currentBlock.kind === 'number')
+                        ) {
+                            playShootSound();
+                            const eqUsed = currentBlock.kind === 'equation' ? currentBlock : (bottomItem.kind === 'equation' ? bottomItem : null);
+                            const newVal = bottomItem.value === 0 ? 2 : bottomItem.value * 2;
+                            grid[ROWS - 1][col] = { kind: 'number', value: newVal };
+                            score += Math.abs(newVal) * 10;
+
+                            advanceTurn();
+                            renderGrid({ [`${ROWS - 1}-${col}`]: 'anim-merge' });
+                            spawnFloatingPoints(ROWS - 1, col, Math.abs(newVal) * 10);
+                            if (eqUsed) {
+                                showEduBanner(`✅ ${eqUsed.explanation} → Fundiu para ${newVal}!`, 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950');
+                            }
+                            playMergeSound(1);
+                            await sleep(260);
+                            await resolveMerges([ROWS - 1, col]);
+                            finishTurn();
+                            return;
+                        } else {
+                            showEduBanner('Coluna cheia! Escolha outra coluna.', 'bg-rose-500 text-white');
+                            playTone(170, 'sawtooth', 0.14, 0.06);
+                            isAnimating = false;
+                            return;
+                        }
+                    }
+
+                    // Caso 2: Lançamento normal até targetRow
+                    playShootSound();
+
+                    if (currentBlock.kind === 'vertex') {
+                        // Bloco Vértice (Coringa)
+                        if (targetRow > 0 && grid[targetRow - 1][col] !== null) {
+                            const hitRow = targetRow - 1;
+                            const hitItem = grid[hitRow][col];
+                            const doubled = hitItem.value === 0 ? 2 : hitItem.value * 2;
+                            grid[hitRow][col] = { kind: 'number', value: doubled };
+                            score += Math.abs(doubled) * 15;
+
+                            advanceTurn();
+                            renderGrid({ [`${hitRow}-${col}`]: 'anim-merge' });
+                            spawnFloatingPoints(hitRow, col, Math.abs(doubled) * 15);
+                            showEduBanner(`★ Bloco Vértice dobrou para ${doubled}!`, 'bg-gradient-to-r from-purple-500 to-pink-500 text-white');
+                            playBonusSound();
+                            await sleep(260);
+                            await resolveMerges([hitRow, col]);
+                        } else {
+                            grid[targetRow][col] = { kind: 'number', value: 4 };
+                            advanceTurn();
+                            renderGrid({ [`${targetRow}-${col}`]: 'anim-shoot' });
+                            await sleep(230);
+                            await resolveMerges([targetRow, col]);
+                        }
+                    } else {
+                        // Número Simples ou Bloco de Função
+                        grid[targetRow][col] = { ...currentBlock };
+                        advanceTurn();
+                        renderGrid({ [`${targetRow}-${col}`]: 'anim-shoot' });
+                        await sleep(230);
+                        await resolveMerges([targetRow, col]);
+                    }
+
+                    finishTurn();
+                } finally {
+                    isAnimating = false;
+                }
+            }
+
+            function advanceTurn() {
+                currentBlock = nextBlock;
+                nextBlock = generateNextBlock();
+                movesCount++;
+                updateHUD();
+            }
+
+            function finishTurn() {
+                updateHUD();
+
+                // A cada 8 jogadas, dispara o Desafio Relâmpago (Bônus de Parábola)
+                if (movesCount > 0 && movesCount % MOVES_FOR_CHALLENGE === 0 && !challengeActive) {
+                    triggerParabolaChallenge();
+                }
+
+                if (checkGameOver()) {
+                    triggerGameOver();
+                }
+            }
+
+            // ==========================================
+            // DESAFIO RELÂMPAGO (BÔNUS DE PARÁBOLA)
+            // ==========================================
+            function triggerParabolaChallenge() {
+                challengeActive = true;
+                const item = CHALLENGE_QUESTIONS[Math.floor(Math.random() * CHALLENGE_QUESTIONS.length)];
+
+                challengeQuestionEl.textContent = item.q;
+                challengeOptionsEl.innerHTML = '';
+
+                // Embaralha a ordem visual dos dois botões
+                const indexedOpts = item.options.map((label, idx) => ({
+                    label,
+                    isCorrect: idx === item.correctIndex
+                })).sort(() => Math.random() - 0.5);
+
+                indexedOpts.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'py-2 px-3 rounded-xl bg-white/10 hover:bg-cyan-400 hover:text-slate-950 border border-cyan-400/40 font-extrabold text-xs sm:text-sm transition active:scale-95 cursor-pointer';
+                    btn.textContent = opt.label;
+                    btn.addEventListener('click', () => resolveParabolaChallenge(opt.isCorrect));
+                    challengeOptionsEl.appendChild(btn);
+                });
+
+                challengeTimerBar.classList.remove('timer-bar-anim');
+                void challengeTimerBar.offsetWidth;
+                challengeTimerBar.classList.add('timer-bar-anim');
+
+                let secondsLeft = 12;
+                challengeTimerText.textContent = `${secondsLeft}s`;
+                challengeBar.classList.remove('hidden');
+                updateHUD();
+
+                clearInterval(challengeCountdown);
+                challengeCountdown = setInterval(() => {
+                    secondsLeft--;
+                    challengeTimerText.textContent = `${Math.max(0, secondsLeft)}s`;
+                }, 1000);
+
+                clearTimeout(challengeTimer);
+                challengeTimer = setTimeout(() => {
+                    resolveParabolaChallenge(false);
+                }, 12000);
+            }
+
+            function resolveParabolaChallenge(won) {
+                if (!challengeActive) return;
+                challengeActive = false;
+                clearTimeout(challengeTimer);
+                clearInterval(challengeCountdown);
+                challengeBar.classList.add('hidden');
+
+                if (won) {
+                    currentBlock = { kind: 'vertex', value: 0 };
+                    playBonusSound();
+                    showEduBanner('🎉 Acertou! Bloco Vértice (Coringa 2×) pronto!', 'bg-gradient-to-r from-purple-500 to-pink-500 text-white');
+                } else {
+                    playTone(180, 'sawtooth', 0.18, 0.07);
+                    showEduBanner('Resposta incorreta! Consulte a Cola Rápida 📐', 'bg-rose-500 text-white');
+                }
+                updateHUD();
+            }
+
+            function triggerGameOver() {
+                isGameOver = true;
+                challengeActive = false;
+                clearTimeout(challengeTimer);
+                clearInterval(challengeCountdown);
+                challengeBar.classList.add('hidden');
+
+                document.getElementById('final-score').textContent = score.toLocaleString('pt-BR');
+                document.getElementById('final-best').textContent = bestScore.toLocaleString('pt-BR');
+                gameoverModal.classList.remove('hidden');
+                playTone(210, 'sawtooth', 0.35, 0.09);
+            }
+
+            // Inicializa ou Reinicia a Partida
+            function initGame() {
+                grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+                score = 0;
+                movesCount = 0;
+                isAnimating = false;
+                isGameOver = false;
+                challengeActive = false;
+                clearTimeout(challengeTimer);
+                clearInterval(challengeCountdown);
+                challengeBar.classList.add('hidden');
+                gameoverModal.classList.add('hidden');
+
+                // Popula as 2 primeiras linhas com números e 2 equações iniciais sem fusões imediatas
+                const starterNums = [1, 2, 3, 4, 8];
+                for (let r = 0; r < 2; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        let val;
+                        do {
+                            val = starterNums[Math.floor(Math.random() * starterNums.length)];
+                        } while (
+                            (c > 0 && grid[r][c - 1] && grid[r][c - 1].value === val) ||
+                            (r > 0 && grid[r - 1][c] && grid[r - 1][c].value === val)
+                        );
+                        grid[r][c] = { kind: 'number', value: val };
+                    }
+                }
+
+                // Garante um bloco inicial acessível e interessante
+                currentBlock = {
+                    kind: 'equation',
+                    value: 4,
+                    topLabel: 'f(2)',
+                    subLabel: 'x²',
+                    explanation: 'f(2) = 2² = 4'
+                };
+                nextBlock = generateNextBlock();
+
+                updateHUD();
+                renderGrid();
+            }
+
+            // Eventos de Clique / Toque nas Colunas
+            document.querySelectorAll('#columns-overlay button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const col = parseInt(btn.getAttribute('data-col'), 10);
+                    dropBlockInColumn(col);
+                });
+            });
+
+            // Atalhos de Teclado (1 a 5)
+            document.addEventListener('keydown', (e) => {
+                if (isGameOver || isAnimating) return;
+                if (e.key >= '1' && e.key <= '5') {
+                    dropBlockInColumn(parseInt(e.key, 10) - 1);
+                }
+            });
+
+            // Botões de Interface e Modais
+            document.getElementById('btn-restart').addEventListener('click', initGame);
+            document.getElementById('btn-play-again').addEventListener('click', initGame);
+
+            document.getElementById('btn-sound').addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                document.getElementById('icon-sound-on').classList.toggle('hidden', !soundEnabled);
+                document.getElementById('icon-sound-off').classList.toggle('hidden', soundEnabled);
+                if (soundEnabled) playTone(440, 'sine', 0.1, 0.06);
+            });
+
+            // Inicia o jogo
+            initGame();
+        })();
+    </script>
+</body>
+</html>
